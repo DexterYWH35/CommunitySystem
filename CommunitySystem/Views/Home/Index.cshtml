@@ -1,0 +1,257 @@
+@model CommunitySystem.ViewModels.HomeIndexViewModel
+
+@{
+    ViewData["Title"] = "Community Hub";
+}
+
+<section class="hero-section rounded-4 p-4 p-lg-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="eyebrow">Ren Residence Community System</span>
+            <h1 class="display-5 fw-semibold mt-3 mb-3">View community updates and conversations in one place.</h1>
+            <p class="lead hero-tagline mb-4">
+                Stay informed, connected, and engaged with everything happening at REN Residences.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-controller="Posts" asp-action="Index" class="btn btn-primary btn-lg">Browse Posts</a>
+                    <a asp-controller="Posts" asp-action="Create" class="btn btn-outline-light btn-lg">Create New Post</a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Log In</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">Register</a>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="hero-card p-4 rounded-4 shadow-sm">
+                <h2 class="h5 mb-4">Platform Snapshot</h2>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Posts</span>
+                        <strong>@Model.TotalPosts</strong>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Comments</span>
+                        <strong>@Model.TotalComments</strong>
+                    </div>
+                </div>
+                <p class="text-secondary mb-0 mt-4">
+                    Latest post:
+                    <span class="fw-semibold text-light">@(Model.LatestPostTitle ?? "No posts yet")</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 mb-1">Notice Board</h2>
+                <p class="text-secondary mb-0">Important updates and announcements for registered residents.</p>
+            </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Notices" asp-action="Index" class="btn btn-outline-primary">Manage Notices</a>
+            }
+        </div>
+
+        @if (Model.Notices.Count == 0)
+        {
+            <div class="info-panel rounded-4 p-4">
+                <p class="mb-0 text-secondary">No notices are published at the moment.</p>
+            </div>
+        }
+        else
+        {
+            @if (Model.FeaturedNotice is not null)
+            {
+                <article class="notice-feature-card mb-4">
+                    <div class="row g-0 align-items-stretch">
+                        <div class="col-lg-5">
+                            @if (!string.IsNullOrWhiteSpace(Model.FeaturedNotice.ImagePath))
+                            {
+                                <img src="@Model.FeaturedNotice.ImagePath" alt="@Model.FeaturedNotice.Title" class="notice-feature-image" />
+                            }
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="p-4 p-lg-5">
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="badge notice-status-badge rounded-pill">Featured Notice</span>
+                                    @if (Model.FeaturedNotice.IsPinned)
+                                    {
+                                        <span class="badge notice-status-badge rounded-pill">Pinned</span>
+                                    }
+                                </div>
+                                <h3 class="h2 notice-title mb-3">@Model.FeaturedNotice.Title</h3>
+                                <p class="text-secondary mb-4">@Model.FeaturedNotice.Content</p>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <a asp-controller="Notices" asp-action="Details" asp-route-id="@Model.FeaturedNotice.Id" class="btn notice-btn">Read Formal Notice</a>
+                                    @if (!string.IsNullOrWhiteSpace(Model.FeaturedNotice.AttachmentPath))
+                                    {
+                                        <a href="@Model.FeaturedNotice.AttachmentPath" target="_blank" rel="noopener" class="notice-attachment-link">
+                                            Download PDF
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+
+            <div class="row g-4">
+                @foreach (var notice in Model.Notices.Where(notice => Model.FeaturedNotice is null || notice.Id != Model.FeaturedNotice.Id))
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <article class="notice-card h-100">
+                            @if (!string.IsNullOrWhiteSpace(notice.ImagePath))
+                            {
+                                <img src="@notice.ImagePath" alt="@notice.Title" class="notice-card-image" />
+                            }
+                            <div class="p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge rounded-pill text-bg-light">Notice</span>
+                                        @if (notice.IsPinned)
+                                        {
+                                            <span class="badge notice-status-badge rounded-pill">Pinned</span>
+                                        }
+                                    </div>
+                                    <span class="small text-secondary">@notice.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                </div>
+                                <h3 class="h5">@notice.Title</h3>
+                                <p class="text-secondary mb-0">@notice.Content</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
+                                @if (!string.IsNullOrWhiteSpace(notice.AttachmentPath))
+                                {
+                                    <a href="@notice.AttachmentPath" target="_blank" rel="noopener" class="notice-attachment-link">
+                                        PDF
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span></span>
+                                }
+                                <a asp-controller="Notices" asp-action="Details" asp-route-id="@notice.Id" class="btn btn-sm notice-btn">View Notice</a>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+}
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">Recent Posts</h2>
+            <p class="text-secondary mb-0">Seeded content gives you a ready-to-test experience from first launch.</p>
+        </div>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Posts" asp-action="Index" class="btn btn-outline-primary">View All</a>
+        }
+    </div>
+
+    <div class="row g-4">
+        @foreach (var post in Model.RecentPosts)
+        {
+            <div class="col-md-6 col-xl-4">
+                <article class="card border-0 shadow-sm h-100 post-card">
+                    @if (!string.IsNullOrWhiteSpace(post.ImagePath))
+                    {
+                        <img src="@post.ImagePath" alt="@post.Title" class="post-card-image" />
+                    }
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge rounded-pill text-bg-light">@post.AuthorName</span>
+                            <span class="small text-secondary">@post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                        </div>
+                        <h3 class="h5">@post.Title</h3>
+                        <p class="text-secondary">@post.ContentPreview</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
+                        <small class="text-secondary">@post.Comments.Count comment(s) · @post.Likes.Count like(s)</small>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-sm btn-primary">Read More</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-primary">Login To Read</a>
+                        }
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">Most Liked Posts</h2>
+            <p class="text-secondary mb-0">See which community updates users have found most useful.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var post in Model.MostLikedPosts)
+        {
+            <div class="col-md-6 col-xl-4">
+                <article class="card border-0 shadow-sm h-100 post-card">
+                    @if (!string.IsNullOrWhiteSpace(post.ImagePath))
+                    {
+                        <img src="@post.ImagePath" alt="@post.Title" class="post-card-image" />
+                    }
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge rounded-pill text-bg-light">@post.AuthorName</span>
+                            <span class="small text-secondary">@post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                        </div>
+                        <h3 class="h5">@post.Title</h3>
+                        <p class="text-secondary">@post.ContentPreview</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
+                        <small class="text-secondary">@post.Likes.Count like(s) · @post.Comments.Count comment(s)</small>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-sm btn-primary">Read More</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-primary">Login To Read</a>
+                        }
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="row g-4">
+    <div class="col-lg-6">
+        <div class="info-panel h-100 rounded-4 p-4">
+            <h2 class="h4 mb-3">Built for REN - 人</h2>
+            <p class="text-secondary mb-0">
+                Discover Ren Residences where modern living meets everyday convenience, comfort, and community. 
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="info-panel h-100 rounded-4 p-4">
+            <h2 class="h4 mb-3">Straightforward content management</h2>
+            <p class="text-secondary mb-0">
+                Posts and comments both support create, read, update, and delete workflows with SQLite-backed persistence.
+            </p>
+        </div>
+    </div>
+</section>

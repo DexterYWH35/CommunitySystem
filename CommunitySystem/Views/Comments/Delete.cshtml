@@ -1,0 +1,29 @@
+@model CommunitySystem.Models.Comment
+
+@{
+    ViewData["Title"] = "Delete Comment";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Delete</span>
+    <h1 class="display-6 fw-semibold">Delete comment</h1>
+    <p class="text-secondary mb-0">Review the content before removing it from the conversation thread.</p>
+</div>
+
+<div class="detail-card p-4">
+    <dl class="row">
+        <dt class="col-sm-3">Post</dt>
+        <dd class="col-sm-9">@Model.Post?.Title</dd>
+        <dt class="col-sm-3">Author</dt>
+        <dd class="col-sm-9">@Model.AuthorName</dd>
+        <dt class="col-sm-3">Comment</dt>
+        <dd class="col-sm-9">@Model.Body</dd>
+    </dl>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-danger">Delete Comment</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

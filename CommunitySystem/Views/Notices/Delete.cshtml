@@ -1,0 +1,33 @@
+@model CommunitySystem.Models.Notice
+
+@{
+    ViewData["Title"] = "Delete Notice";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Admin</span>
+    <h1 class="display-6 fw-semibold">Delete notice</h1>
+    <p class="text-secondary mb-0">Review the notice before removing it from the homepage board.</p>
+</div>
+
+<div class="detail-card p-4">
+    <h2 class="h4">@Model.Title</h2>
+    <p class="text-secondary">@Model.Content</p>
+    @if (!string.IsNullOrWhiteSpace(Model.ImagePath))
+    {
+        <img src="@Model.ImagePath" alt="@Model.Title" class="post-image-preview mb-4" />
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AttachmentPath))
+    {
+        <a href="@Model.AttachmentPath" target="_blank" rel="noopener" class="notice-attachment-link d-inline-block mb-4">
+            @Model.AttachmentName
+        </a>
+    }
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-danger">Delete Notice</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

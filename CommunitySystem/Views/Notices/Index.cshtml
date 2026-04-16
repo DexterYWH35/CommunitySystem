@@ -1,0 +1,66 @@
+@model IEnumerable<CommunitySystem.Models.Notice>
+
+@{
+    ViewData["Title"] = "Notice Board";
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Admin</span>
+        <h1 class="display-6 fw-semibold">Notice Board Management</h1>
+        <p class="text-secondary mb-0">Create and manage homepage notices for registered users.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Create Notice</a>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Notice</th>
+                    <th>Published</th>
+                    <th>Priority</th>
+                    <th>Updated</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="fw-semibold">@item.Title</div>
+                        <div class="text-secondary small">@item.Content</div>
+                    </td>
+                    <td>
+                        <span class="badge text-bg-light rounded-pill">@(item.IsPublished ? "Yes" : "No")</span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column align-items-start gap-1">
+                            @if (item.IsFeatured)
+                            {
+                                <span class="badge notice-status-badge rounded-pill">Featured</span>
+                            }
+                            @if (item.IsPinned)
+                            {
+                                <span class="badge notice-status-badge rounded-pill">Pinned</span>
+                            }
+                            @if (!item.IsFeatured && !item.IsPinned)
+                            {
+                                <span class="small text-secondary">Standard</span>
+                            }
+                        </div>
+                    </td>
+                    <td>@(item.UpdatedAtUtc ?? item.CreatedAtUtc).ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm notice-btn">View</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

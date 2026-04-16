@@ -1,0 +1,68 @@
+@model IEnumerable<CommunitySystem.Models.Post>
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Posts";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Content</span>
+        <h1 class="display-6 fw-semibold">Posts</h1>
+        <p class="text-secondary mb-0">Manage community updates, announcements, and internal posts.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Create Post</a>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Created</th>
+                    <th>Comments</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-start gap-3">
+                            @if (!string.IsNullOrWhiteSpace(item.ImagePath))
+                            {
+                                <img src="@item.ImagePath" alt="@item.Title" class="post-list-thumb" />
+                            }
+                            <div>
+                                <div class="fw-semibold">@item.Title</div>
+                                <div class="text-secondary small">@item.ContentPreview</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>@item.AuthorName</td>
+                    <td>@item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</td>
+                    <td>
+                        <div class="d-flex flex-column align-items-start gap-1">
+                            <span class="badge text-bg-light rounded-pill">@item.Comments.Count comment(s)</span>
+                            <span class="badge text-bg-light rounded-pill">@item.Likes.Count like(s)</span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">View</a>
+                        @if (isAdmin || item.OwnerUserId == currentUserId)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

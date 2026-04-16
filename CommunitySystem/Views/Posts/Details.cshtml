@@ -1,0 +1,114 @@
+@model CommunitySystem.ViewModels.PostDetailsViewModel
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Post Details";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var canManagePost = User.IsInRole("Admin") || Model.Post.OwnerUserId == currentUserId;
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Post</span>
+        <h1 class="display-6 fw-semibold">@Model.Post.Title</h1>
+        <p class="text-secondary mb-0">By @Model.Post.AuthorName · @Model.Post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (canManagePost)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Post.Id" class="btn btn-outline-secondary">Edit Post</a>
+        }
+    </div>
+</div>
+
+<div class="detail-card p-4 mb-4">
+    @if (!string.IsNullOrWhiteSpace(Model.Post.ImagePath))
+    {
+        <img src="@Model.Post.ImagePath" alt="@Model.Post.Title" class="post-image-detail mb-4" />
+    }
+    <p class="mb-0">@Model.Post.Content</p>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+        <form asp-action="ToggleLike" asp-route-id="@Model.Post.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn @(Model.HasLikedPost ? "btn-primary" : "btn-outline-primary")">
+                @(Model.HasLikedPost ? "Unlike" : "Like") Post
+            </button>
+        </form>
+        <span class="badge text-bg-light rounded-pill">@Model.PostLikeCount like(s)</span>
+    </div>
+</div>
+
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0">Comments</h2>
+        <span class="badge text-bg-light rounded-pill">@Model.Comments.Count</span>
+    </div>
+
+    @if (Model.Comments.Count == 0)
+    {
+        <div class="comment-card">
+            <p class="mb-0 text-secondary">No comments yet. Start the conversation by adding the first one.</p>
+        </div>
+    }
+    else
+    {
+        <div class="comment-list">
+            @foreach (var comment in Model.Comments)
+            {
+                var canManageComment = User.IsInRole("Admin") || comment.OwnerUserId == currentUserId;
+                <article class="comment-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div>
+                            <h3 class="h6 mb-1">@comment.AuthorName</h3>
+                            <p class="small text-secondary mb-0">@comment.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap justify-content-end">
+                            <form asp-controller="Comments" asp-action="ToggleLike" asp-route-id="@comment.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm @(comment.Likes.Any(like => like.UserId == currentUserId) ? "btn-primary" : "btn-outline-primary")">
+                                    @(comment.Likes.Any(like => like.UserId == currentUserId) ? "Unlike" : "Like")
+                                    <span class="ms-1">@comment.Likes.Count</span>
+                                </button>
+                            </form>
+                            <a asp-controller="Comments" asp-action="Details" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-primary">View</a>
+                            @if (canManageComment)
+                            {
+                                <a asp-controller="Comments" asp-action="Edit" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a asp-controller="Comments" asp-action="Delete" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                            }
+                        </div>
+                    </div>
+                    <p class="mb-0">@comment.Body</p>
+                </article>
+            }
+        </div>
+    }
+</section>
+<br />
+<section class="form-card p-4 mb-4">
+    @* <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-1">Leave a comment</h2>
+            <p class="text-secondary mb-0">Add your response directly under this post.</p>
+        </div>
+    </div> *@
+
+    <form asp-action="AddComment" asp-route-id="@Model.Post.Id" method="post">
+        <input type="hidden" asp-for="NewComment.PostId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="NewComment.Body" class="form-label"></label>
+            <textarea asp-for="NewComment.Body" class="form-control" placeholder="Write your comment here..."></textarea>
+            <span asp-validation-for="NewComment.Body" class="text-danger"></span>
+        </div>
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </div>
+    </form>
+</section>
+
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

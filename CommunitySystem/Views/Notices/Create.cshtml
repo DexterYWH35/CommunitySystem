@@ -1,0 +1,65 @@
+@model CommunitySystem.ViewModels.NoticeFormViewModel
+
+@{
+    ViewData["Title"] = "Create Notice";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Admin</span>
+    <h1 class="display-6 fw-semibold">Create notice</h1>
+    <p class="text-secondary mb-0">Add a new notice with text and an optional image for the homepage board.</p>
+</div>
+
+<div class="form-card p-4">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Content" class="form-label"></label>
+                <textarea asp-for="Content" class="form-control"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="ImageFile" class="form-label"></label>
+                <input asp-for="ImageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="AttachmentFile" class="form-label"></label>
+                <input asp-for="AttachmentFile" class="form-control" accept="application/pdf" />
+                <span asp-validation-for="AttachmentFile" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsPublished" class="form-check-input" />
+                    <label asp-for="IsPublished" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsPinned" class="form-check-input" />
+                    <label asp-for="IsPinned" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" />
+                    <label asp-for="IsFeatured" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary">Save Notice</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="auth-shell">
+    <section class="auth-panel auth-panel--form mx-auto">
+        <div class="auth-header">
+            <span class="eyebrow">Restricted</span>
+            <h1 class="h2 mt-3 mb-2">Access denied</h1>
+            <p class="text-secondary mb-4">Your account does not have permission to perform that action.</p>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back To Home</a>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary">Switch Account</a>
+        </div>
+    </section>
+</div>

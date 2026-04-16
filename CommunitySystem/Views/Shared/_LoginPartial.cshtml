@@ -1,0 +1,32 @@
+@using CommunitySystem.Security
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<CommunitySystem.Models.ApplicationUser> SignInManager
+@inject UserManager<CommunitySystem.Models.ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    <li class="nav-item">
+        <span class="nav-link nav-user-label">@(currentUser?.Email ?? "Signed In")@(isAdmin ? " · Admin" : string.Empty)</span>
+    </li>
+    @* 
+    -Post Button-
+    <li class="nav-item mt-3 mt-lg-0">
+        <a class="btn btn-primary" asp-area="" asp-controller="Posts" asp-action="Create">New Post</a>
+    </li> *@
+    <li class="nav-item mt-3 mt-lg-0">
+        <form class="d-inline" asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-outline-light">Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item mt-3 mt-lg-0">
+        <a class="btn btn-outline-light" asp-controller="Account" asp-action="Register">Register</a>
+    </li>
+    <li class="nav-item mt-3 mt-lg-0">
+        <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Login</a>
+    </li>
+}

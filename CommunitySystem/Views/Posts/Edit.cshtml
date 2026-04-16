@@ -1,0 +1,51 @@
+@model CommunitySystem.ViewModels.PostFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Post";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Update</span>
+    <h1 class="display-6 fw-semibold">Edit post</h1>
+    <p class="text-secondary mb-0">Refine the post content, author details, or wording.</p>
+</div>
+
+<div class="form-card p-4">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ExistingImagePath" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Content" class="form-label"></label>
+                <textarea asp-for="Content" class="form-control"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="ImageFile" class="form-label"></label>
+                <input asp-for="ImageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ExistingImagePath))
+            {
+                <div class="col-12">
+                    <span class="form-label d-block">Current image</span>
+                    <img src="@Model.ExistingImagePath" alt="Current post image" class="post-image-preview" />
+                </div>
+            }
+        </div>
+        <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

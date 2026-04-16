@@ -1,0 +1,83 @@
+@model CommunitySystem.ViewModels.NoticeFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Notice";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Admin</span>
+    <h1 class="display-6 fw-semibold">Edit notice</h1>
+    <p class="text-secondary mb-0">Update the notice text, publication status, or image.</p>
+</div>
+
+<div class="form-card p-4">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ExistingImagePath" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Content" class="form-label"></label>
+                <textarea asp-for="Content" class="form-control"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="ImageFile" class="form-label"></label>
+                <input asp-for="ImageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ExistingImagePath))
+            {
+                <div class="col-12">
+                    <span class="form-label d-block">Current image</span>
+                    <img src="@Model.ExistingImagePath" alt="Current notice image" class="post-image-preview" />
+                </div>
+            }
+            <div class="col-12">
+                <label asp-for="AttachmentFile" class="form-label"></label>
+                <input asp-for="AttachmentFile" class="form-control" accept="application/pdf" />
+                <span asp-validation-for="AttachmentFile" class="text-danger"></span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.ExistingAttachmentPath))
+            {
+                <div class="col-12">
+                    <span class="form-label d-block">Current attachment</span>
+                    <a href="@Model.ExistingAttachmentPath" target="_blank" rel="noopener" class="notice-attachment-link">
+                        @Model.ExistingAttachmentName
+                    </a>
+                </div>
+            }
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsPublished" class="form-check-input" />
+                    <label asp-for="IsPublished" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsPinned" class="form-check-input" />
+                    <label asp-for="IsPinned" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check">
+                    <input asp-for="IsFeatured" class="form-check-input" />
+                    <label asp-for="IsFeatured" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

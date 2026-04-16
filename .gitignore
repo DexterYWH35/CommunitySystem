@@ -1,0 +1,29 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+
+# Logs
+*.log
+
+# ASP.NET Core / Visual Studio
+.vs/
+*.dbmdl
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+

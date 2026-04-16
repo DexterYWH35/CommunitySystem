@@ -1,0 +1,44 @@
+@model CommunitySystem.Models.Comment
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Comment Details";
+    var canManageComment = User.IsInRole("Admin") || Model.OwnerUserId == User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Comment</span>
+        <h1 class="display-6 fw-semibold">Comment details</h1>
+        <p class="text-secondary mb-0">View the full comment record and related post context.</p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (canManageComment)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Edit</a>
+        }
+        <a asp-controller="Posts" asp-action="Details" asp-route-id="@Model.PostId" class="btn btn-primary">Go To Post</a>
+    </div>
+</div>
+
+<div class="detail-card p-4">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Post</dt>
+        <dd class="col-sm-9">@Model.Post?.Title</dd>
+        <dt class="col-sm-3">Author</dt>
+        <dd class="col-sm-9">@Model.AuthorName</dd>
+        <dt class="col-sm-3">Created</dt>
+        <dd class="col-sm-9">@Model.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Comment</dt>
+        <dd class="col-sm-9">@Model.Body</dd>
+    </dl>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+        <form asp-action="ToggleLike" asp-route-id="@Model.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn @(Model.Likes.Any(like => like.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier)) ? "btn-primary" : "btn-outline-primary")">
+                @(Model.Likes.Any(like => like.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier)) ? "Unlike" : "Like") Comment
+            </button>
+        </form>
+        <span class="badge text-bg-light rounded-pill">@Model.Likes.Count like(s)</span>
+    </div>
+</div>

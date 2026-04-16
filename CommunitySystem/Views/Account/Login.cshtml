@@ -1,0 +1,60 @@
+@model CommunitySystem.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="auth-shell">
+    <section class="auth-panel auth-panel--brand">
+        <span class="eyebrow">Welcome Back</span>
+        <h1 class="display-6 fw-semibold mt-3 mb-3">Sign in to continue managing your community updates.</h1>
+        <p class="text-secondary mb-4">
+            Access your posts, follow discussions, and keep the portal current with your team's latest updates.
+        </p>
+        <div class="auth-highlights">
+            <div class="stat-card">
+                <span class="stat-label">Theme</span>
+                <strong>Royal Magenta</strong>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Access</span>
+                <strong>Secure role-based sign-in</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-panel auth-panel--form">
+        <div class="auth-header">
+            <span class="eyebrow">Account</span>
+            <h2 class="h3 mt-3 mb-2">Login</h2>
+            <p class="text-secondary mb-0">Use your account to access posts, comments, and moderation tools.</p>
+        </div>
+
+        <form asp-action="Login" method="post" class="mt-4">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-4">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label"></label>
+            </div>
+            <div class="d-grid gap-3">
+                <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                <a asp-action="Register" class="btn btn-outline-primary">Create an account</a>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
