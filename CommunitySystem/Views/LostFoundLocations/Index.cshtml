@@ -1,0 +1,49 @@
+@model IReadOnlyList<CommunitySystem.Models.LostFoundLocationPreset>
+
+@{
+    ViewData["Title"] = "Lost & Found Locations";
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Admin</span>
+        <h1 class="display-6 fw-semibold">Lost &amp; Found Locations</h1>
+        <p class="text-secondary mb-0">These presets appear in the Lost &amp; Found location dropdown.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary">Add Location</a>
+    </div>
+</div>
+
+<div class="table-card p-4">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Active</th>
+                    <th>Order</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var location in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@location.Name</td>
+                        <td>
+                            <span class="badge rounded-pill @(location.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                                @(location.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>@location.DisplayOrder</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@location.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@location.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

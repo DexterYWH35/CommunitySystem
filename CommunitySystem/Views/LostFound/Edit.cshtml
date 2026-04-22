@@ -1,0 +1,119 @@
+@model CommunitySystem.ViewModels.LostFoundItemFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Lost or Found Item";
+}
+
+<section class="lf-shell">
+    <div class="lf-banner mb-4">
+        <div>
+            <span class="lf-kicker">Case Update</span>
+            <h1>Edit this listing</h1>
+            <p>Admins and the original reporter can keep the case details accurate as the situation changes.</p>
+        </div>
+    </div>
+
+    <div class="lf-form-layout">
+        <div class="lf-panel">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="row g-4">
+            <div class="col-md-6">
+                <label asp-for="ListingType" class="form-label"></label>
+                <select asp-for="ListingType" asp-items="ViewBag.ListingTypeOptions" class="form-select"></select>
+                <span asp-validation-for="ListingType" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Category" class="form-label"></label>
+                <input asp-for="Category" class="form-control" />
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LocationDetails" class="form-label"></label>
+                <select asp-for="LocationDetails" asp-items="ViewBag.LocationOptions" class="form-select"></select>
+                <span asp-validation-for="LocationDetails" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="IncidentDateUtc" class="form-label"></label>
+                <input asp-for="IncidentDateUtc" class="form-control" />
+                <span asp-validation-for="IncidentDateUtc" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="CustomLocationDetails" class="form-label"></label>
+                <input asp-for="CustomLocationDetails" class="form-control" placeholder="Only fill this when you selected Other." />
+                <span asp-validation-for="CustomLocationDetails" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="ContactName" class="form-label"></label>
+                <input asp-for="ContactName" class="form-control" />
+                <span asp-validation-for="ContactName" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="ContactEmail" class="form-label"></label>
+                <input asp-for="ContactEmail" class="form-control" />
+                <span asp-validation-for="ContactEmail" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="ContactPhone" class="form-label"></label>
+                <input asp-for="ContactPhone" class="form-control" />
+                <span asp-validation-for="ContactPhone" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                @if (!string.IsNullOrWhiteSpace(Model.ExistingImagePath))
+                {
+                    <div class="mb-3">
+                        <img src="@Model.ExistingImagePath" alt="@Model.Title" class="lf-image-preview" />
+                    </div>
+                }
+                <label asp-for="ImageFile" class="form-label"></label>
+                <input asp-for="ImageFile" class="form-control" accept="image/*" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+                <div class="form-text">Upload a new image only if you want to replace the current one.</div>
+            </div>
+                </div>
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Save Changes
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <aside class="lf-sidecard lf-sidecard--muted">
+            <h2 class="lf-section-title">Update tips</h2>
+            <ul class="lf-checklist">
+                <li>Refresh the location details if the handover point has changed.</li>
+                <li>Replace the image only when the new photo is clearer.</li>
+                <li>Keep contact details current so admins can coordinate safely.</li>
+            </ul>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

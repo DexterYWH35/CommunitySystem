@@ -1,0 +1,108 @@
+@model IReadOnlyList<CommunitySystem.Models.LostFoundItem>
+@using CommunitySystem.Models
+
+@{
+    ViewData["Title"] = "Lost & Found";
+}
+
+<section class="lf-shell">
+    <div class="lf-banner mb-4">
+        <div>
+            <span class="lf-kicker">Community Safety Desk</span>
+            <h1>Lost &amp; Found Registry</h1>
+            <p>Track found items, report missing belongings, and route all ownership claims through verified contact details.</p>
+        </div>
+        <div class="lf-banner-actions">
+            <a asp-action="Create" class="btn btn-primary">
+                <span class="lf-btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                Report an Item
+            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="LostFoundLocations" asp-action="Index" class="btn btn-outline-secondary">
+                    <span class="lf-btn-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M12 11.5a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </span>
+                    LF Locations
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="lf-overview mb-4">
+        <article class="lf-overview-card">
+            <span class="lf-meta-label">Open cases</span>
+            <strong>@Model.Count(item => item.Status == LostFoundItemStatus.Open)</strong>
+        </article>
+        <article class="lf-overview-card">
+            <span class="lf-meta-label">Under review</span>
+            <strong>@Model.Count(item => item.Status == LostFoundItemStatus.ClaimUnderReview)</strong>
+        </article>
+        <article class="lf-overview-card">
+            <span class="lf-meta-label">Resolved</span>
+            <strong>@Model.Count(item => item.Status == LostFoundItemStatus.Resolved)</strong>
+        </article>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="lf-empty">
+            <h2>No current listings</h2>
+            <p>No lost or found items have been reported yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="lf-card-grid">
+            @foreach (var item in Model)
+            {
+                var itemTypeClass = item.ListingType == LostFoundListingType.Found ? "lf-tag--found" : "lf-tag--lost";
+                var statusClass = item.Status == LostFoundItemStatus.Resolved ? "lf-tag--resolved" : "lf-tag--open";
+                <article class="lf-card">
+                    <div class="lf-card-media">
+                        @if (!string.IsNullOrWhiteSpace(item.ImagePath))
+                        {
+                            <img src="@item.ImagePath" alt="@item.Title" class="lf-card-image" />
+                        }
+                        else
+                        {
+                            <div class="lf-card-placeholder">Lost &amp; Found</div>
+                        }
+                    </div>
+                    <div class="lf-card-body">
+                        <div class="lf-card-tags">
+                            <span class="lf-tag @itemTypeClass">@item.ListingType</span>
+                            <span class="lf-tag @statusClass">@item.Status</span>
+                        </div>
+                        <h2>@item.Title</h2>
+                        <p class="lf-description">@item.Description</p>
+                        <div class="lf-meta-grid">
+                            <span><strong>Category</strong> @item.Category</span>
+                            @* <span><strong>Location</strong> @item.LocationDetails</span> *@
+                            <span><strong>Reported</strong> @item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            @* <span><strong>Claims</strong> @item.Claims.Count</span> *@
+                        </div>
+                        <div class="lf-card-actions">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                <span class="lf-btn-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M10 6h9M10 12h9M10 18h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        <path d="M6 7h.01M6 12h.01M6 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                                Review Case
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

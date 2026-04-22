@@ -1,0 +1,240 @@
+@model CommunitySystem.ViewModels.LostFoundDetailsViewModel
+@using CommunitySystem.Models
+
+@{
+    ViewData["Title"] = "Lost & Found Details";
+}
+
+<section class="lf-shell">
+    <div class="lf-banner mb-4">
+        <div>
+            <span class="lf-kicker">@Model.Item.ListingType Case</span>
+            <h1>@Model.Item.Title</h1>
+            <p>Reported on @Model.Item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm") and currently marked as @Model.Item.Status.</p>
+        </div>
+        <div class="lf-banner-actions">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <span class="lf-btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Back to List
+            </a>
+            @if (Model.CanManageItem)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Item.Id" class="btn btn-outline-secondary">
+                    <span class="lf-btn-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3L16.5 4a2 2 0 0 0-3 0L3 14.5V20z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    Edit Item
+                </a>
+            }
+            @if (Model.CanDeleteItem)
+            {
+                <a asp-action="Delete" asp-route-id="@Model.Item.Id" class="btn btn-outline-danger">
+                    <span class="lf-btn-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M6 7h12M10 7V5h4v2m-7 0l1 14h8l1-14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    Delete Item
+                </a>
+            }
+            @if (Model.IsAdminView)
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Item.Id" asp-route-status="@LostFoundItemStatus.Open" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-primary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M4 12a8 8 0 0 1 14.6-4.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M18 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Mark Open
+                    </button>
+                </form>
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Item.Id" asp-route-status="@LostFoundItemStatus.Resolved" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Mark Resolved
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="lf-detail-layout mb-4">
+        <article class="lf-panel lf-panel--wide">
+            @if (!string.IsNullOrWhiteSpace(Model.Item.ImagePath))
+            {
+                <img src="@Model.Item.ImagePath" alt="@Model.Item.Title" class="lf-detail-image mb-4" />
+            }
+            <div class="lf-card-tags mb-3">
+                <span class="lf-tag @(Model.Item.ListingType == LostFoundListingType.Found ? "lf-tag--found" : "lf-tag--lost")">@Model.Item.ListingType</span>
+                <span class="lf-tag @(Model.Item.Status == LostFoundItemStatus.Resolved ? "lf-tag--resolved" : "lf-tag--open")">@Model.Item.Status</span>
+            </div>
+            <p class="lf-description mb-4">@Model.Item.Description</p>
+            <div class="lf-summary-grid">
+                <div>
+                    <span class="lf-meta-label">Category</span>
+                    <strong>@Model.Item.Category</strong>
+                </div>
+                <div>
+                    <span class="lf-meta-label">Location</span>
+                    <strong>@Model.Item.LocationDetails</strong>
+                </div>
+                @if (Model.Item.IncidentDateUtc.HasValue)
+                {
+                    <div>
+                        <span class="lf-meta-label">Date related to item</span>
+                        <strong>@Model.Item.IncidentDateUtc.Value.ToLocalTime().ToString("dd MMM yyyy")</strong>
+                    </div>
+                }
+            </div>
+        </article>
+
+        <aside class="lf-sidecard">
+            <h2 class="lf-section-title">Contact Guidance</h2>
+            <p class="mb-3">Claims are screened by collecting the claimant's contact details and verification notes.</p>
+            <div class="lf-meta-stack">
+                <span><strong>Reported by</strong> @Model.Item.ContactName</span>
+                @if (Model.IsAdminView)
+                {
+                    @if (!string.IsNullOrWhiteSpace(Model.Item.ContactPhone))
+                    {
+                        <span><strong>Phone</strong> @Model.Item.ContactPhone</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Item.ContactEmail))
+                    {
+                        <span><strong>Email</strong> @Model.Item.ContactEmail</span>
+                    }
+                }
+                else
+                {
+                    <span>Submitted contact details are visible to admins only for follow-up and verification.</span>
+                }
+            </div>
+        </aside>
+    </div>
+
+    @if (Model.IsAdminView)
+    {
+        <section class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="lf-section-title mb-0">Claim Records</h2>
+                <span class="lf-tag lf-tag--neutral">@Model.Claims.Count record(s)</span>
+            </div>
+
+            @if (Model.Claims.Count == 0)
+            {
+                <div class="lf-empty">
+                    <p class="mb-0">No claims submitted yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="lf-claim-list">
+                    @foreach (var claim in Model.Claims)
+                    {
+                        <article class="lf-claim-card">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <h3>@claim.ClaimantName</h3>
+                                    <p class="text-secondary mb-0">@claim.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                                </div>
+                                <span class="lf-tag lf-tag--neutral">Admin Only</span>
+                            </div>
+                            <div class="lf-meta-stack mb-3">
+                                <span><strong>Email</strong> @claim.ClaimantEmail</span>
+                                <span><strong>Phone</strong> @claim.ClaimantPhone</span>
+                                @if (!string.IsNullOrWhiteSpace(claim.PreferredContactMethod))
+                                {
+                                    <span><strong>Preferred contact</strong> @claim.PreferredContactMethod</span>
+                                }
+                            </div>
+                            <p class="lf-description mb-0">@claim.VerificationDetails</p>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    <section class="lf-panel">
+        <div class="mb-3">
+            <h2 class="lf-section-title mb-1">Claim This Item</h2>
+            <p class="text-secondary mb-0">To support identity checks, every claim must include your contact details and a short description proving the item belongs to you.</p>
+            @if (!Model.CanDeleteItem && Model.CanManageItem && !Model.IsAdminView)
+            {
+                <p class="text-secondary small mt-2 mb-0">This listing can no longer be deleted because a claim has already been submitted.</p>
+            }
+        </div>
+
+        @if (Model.HasCurrentUserClaimed)
+        {
+            <div class="alert alert-info mb-0">You have already submitted a claim for this item. The admin team will use the stored details to follow up.</div>
+        }
+        else if (!Model.Item.IsOpen)
+        {
+            <div class="alert alert-warning mb-0">This item is currently not open for new claims.</div>
+        }
+        else
+        {
+            <form asp-action="Claim" asp-route-id="@Model.Item.Id" method="post">
+                <input type="hidden" asp-for="ClaimForm.LostFoundItemId" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label asp-for="ClaimForm.ClaimantName" class="form-label"></label>
+                        <input asp-for="ClaimForm.ClaimantName" class="form-control" />
+                        <span asp-validation-for="ClaimForm.ClaimantName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ClaimForm.ClaimantEmail" class="form-label"></label>
+                        <input asp-for="ClaimForm.ClaimantEmail" class="form-control" />
+                        <span asp-validation-for="ClaimForm.ClaimantEmail" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ClaimForm.ClaimantPhone" class="form-label"></label>
+                        <input asp-for="ClaimForm.ClaimantPhone" class="form-control" />
+                        <span asp-validation-for="ClaimForm.ClaimantPhone" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ClaimForm.PreferredContactMethod" class="form-label"></label>
+                        <select asp-for="ClaimForm.PreferredContactMethod" asp-items="ViewBag.PreferredContactMethodOptions" class="form-select"></select>
+                        <span asp-validation-for="ClaimForm.PreferredContactMethod" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="ClaimForm.VerificationDetails" class="form-label"></label>
+                        <textarea asp-for="ClaimForm.VerificationDetails" class="form-control" placeholder="Describe distinctive details about the item so the admin team can verify your claim."></textarea>
+                        <span asp-validation-for="ClaimForm.VerificationDetails" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 3l7 4v6c0 5-3 8-7 9-4-1-7-4-7-9V7l7-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Submit Claim
+                    </button>
+                </div>
+            </form>
+        }
+    </section>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -22,6 +22,8 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var isAdmin = User.IsInRole(RoleNames.Admin);
+
         var notices = User.Identity?.IsAuthenticated == true
             ? await _dbContext.Notices
                 .AsNoTracking()
@@ -52,6 +54,28 @@ public class HomeController : Controller
             .Take(3)
             .ToListAsync();
 
+        var lostFoundOpenCount = 0;
+        var lostFoundUnderReviewCount = 0;
+        var lostFoundResolvedCount = 0;
+        var lostFoundClaimsLast7Days = 0;
+        var recentLostFoundItems = new List<LostFoundItem>();
+
+        if (User.Identity?.IsAuthenticated == true && isAdmin)
+        {
+            lostFoundOpenCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.Open);
+            lostFoundUnderReviewCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.ClaimUnderReview);
+            lostFoundResolvedCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.Resolved);
+
+            var sinceUtc = DateTime.UtcNow.AddDays(-7);
+            lostFoundClaimsLast7Days = await _dbContext.LostFoundClaims.CountAsync(claim => claim.CreatedAtUtc >= sinceUtc);
+
+            recentLostFoundItems = await _dbContext.LostFoundItems
+                .AsNoTracking()
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(5)
+                .ToListAsync();
+        }
+
         var viewModel = new HomeIndexViewModel
         {
             TotalPosts = await _dbContext.Posts.CountAsync(),
@@ -60,7 +84,13 @@ public class HomeController : Controller
             RecentPosts = recentPosts,
             MostLikedPosts = mostLikedPosts,
             Notices = notices,
-            FeaturedNotice = featuredNotice
+            FeaturedNotice = featuredNotice,
+            IsAdmin = isAdmin,
+            LostFoundOpenCount = lostFoundOpenCount,
+            LostFoundUnderReviewCount = lostFoundUnderReviewCount,
+            LostFoundResolvedCount = lostFoundResolvedCount,
+            LostFoundClaimsLast7Days = lostFoundClaimsLast7Days,
+            RecentLostFoundItems = recentLostFoundItems
         };
 
         return View(viewModel);

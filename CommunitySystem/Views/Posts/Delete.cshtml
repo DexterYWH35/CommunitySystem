@@ -22,8 +22,22 @@
     <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="Id" />
         <div class="d-flex gap-3">
-            <button type="submit" class="btn btn-danger">Delete Post</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger btn-iconed">
+                <span class="btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 7h12M10 7V5h4v2m-7 0l1 14h8l1-14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Delete Post
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-iconed">
+                <span class="btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Cancel
+            </a>
         </div>
     </form>
 </div>

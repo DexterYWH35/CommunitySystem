@@ -1,0 +1,66 @@
+@model CommunitySystem.Models.LostFoundItem
+
+@{
+    ViewData["Title"] = "Delete Lost or Found Item";
+}
+
+<section class="lf-shell">
+    <div class="lf-banner mb-4">
+        <div>
+            <span class="lf-kicker">Delete Report</span>
+            <h1>Remove this lost or found listing</h1>
+            <p>This option is intended for mistaken reports. User-created items can only be deleted before any claim is submitted.</p>
+        </div>
+    </div>
+
+    <div class="lf-form-layout">
+        <article class="lf-panel lf-panel--warm">
+            <h2 class="lf-section-title">Item summary</h2>
+            <div class="lf-summary-grid">
+                <div>
+                    <span class="lf-meta-label">Title</span>
+                    <strong>@Model.Title</strong>
+                </div>
+                <div>
+                    <span class="lf-meta-label">Type</span>
+                    <strong>@Model.ListingType</strong>
+                </div>
+                <div>
+                    <span class="lf-meta-label">Category</span>
+                    <strong>@Model.Category</strong>
+                </div>
+                <div>
+                    <span class="lf-meta-label">Status</span>
+                    <strong>@Model.Status</strong>
+                </div>
+            </div>
+            <p class="lf-description mt-3 mb-0">@Model.Description</p>
+        </article>
+
+        <aside class="lf-sidecard lf-sidecard--alert">
+            <h2 class="lf-section-title">Before deleting</h2>
+            <p class="mb-3">Deleting removes the listing and any attached image from the portal.</p>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="d-flex gap-3 flex-wrap">
+                    <button type="submit" class="btn btn-danger">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M6 7h12M10 7V5h4v2m-7 0l1 14h8l1-14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Delete Item
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                        <span class="lf-btn-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </aside>
+    </div>
+</section>

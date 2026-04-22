@@ -60,6 +60,8 @@ public static class SeedData
 
             await SeedLikesAsync(dbContext, adminUser, standardUser);
             await SeedNoticesAsync(dbContext);
+            await SeedLostFoundAsync(dbContext, adminUser, standardUser);
+            await SeedLostFoundLocationsAsync(dbContext);
             return;
         }
 
@@ -125,6 +127,8 @@ public static class SeedData
         await dbContext.SaveChangesAsync();
         await SeedLikesAsync(dbContext, adminUser, standardUser);
         await SeedNoticesAsync(dbContext);
+        await SeedLostFoundAsync(dbContext, adminUser, standardUser);
+        await SeedLostFoundLocationsAsync(dbContext);
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(
@@ -224,6 +228,62 @@ public static class SeedData
                 IsPinned = true,
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-2)
             });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedLostFoundAsync(ApplicationDbContext dbContext, ApplicationUser adminUser, ApplicationUser standardUser)
+    {
+        if (await dbContext.LostFoundItems.AnyAsync())
+        {
+            return;
+        }
+
+        dbContext.LostFoundItems.AddRange(
+            new LostFoundItem
+            {
+                Title = "Black water bottle at lobby seating area",
+                Description = "A reusable black bottle was found near the lobby sofas after the weekend family event. The bottle has a silver cap and a small sticker near the base.",
+                Category = "Bottle",
+                LocationDetails = "Tower A lobby seating area",
+                ListingType = LostFoundListingType.Found,
+                ContactName = "Lobby Desk Team",
+                ContactEmail = adminUser.Email,
+                ContactPhone = "012-3456789",
+                ReporterUserId = adminUser.Id,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-3),
+                IncidentDateUtc = DateTime.UtcNow.AddDays(-3).Date
+            },
+            new LostFoundItem
+            {
+                Title = "Lost keychain with access card",
+                Description = "Resident misplaced a blue fabric keychain attached to one silver key and a building access card. Last seen after returning from the gym.",
+                Category = "Keys",
+                LocationDetails = "Between gym level and Tower B lift lobby",
+                ListingType = LostFoundListingType.Lost,
+                ContactName = "Resident Owner",
+                ContactEmail = standardUser.Email,
+                ReporterUserId = standardUser.Id,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-1),
+                IncidentDateUtc = DateTime.UtcNow.AddDays(-2).Date
+            });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedLostFoundLocationsAsync(ApplicationDbContext dbContext)
+    {
+        if (await dbContext.LostFoundLocationPresets.AnyAsync())
+        {
+            return;
+        }
+
+        dbContext.LostFoundLocationPresets.AddRange(
+            new LostFoundLocationPreset { Name = "Tower A lobby", DisplayOrder = 10 },
+            new LostFoundLocationPreset { Name = "Tower B lift lobby", DisplayOrder = 20 },
+            new LostFoundLocationPreset { Name = "Gym level", DisplayOrder = 30 },
+            new LostFoundLocationPreset { Name = "Management office", DisplayOrder = 40 },
+            new LostFoundLocationPreset { Name = "Parking level", DisplayOrder = 50 });
 
         await dbContext.SaveChangesAsync();
     }

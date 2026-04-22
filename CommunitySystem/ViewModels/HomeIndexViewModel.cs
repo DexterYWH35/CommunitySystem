@@ -11,4 +11,11 @@ public class HomeIndexViewModel
     public IReadOnlyCollection<Post> MostLikedPosts { get; init; } = Array.Empty<Post>();
     public IReadOnlyCollection<Notice> Notices { get; init; } = Array.Empty<Notice>();
     public Notice? FeaturedNotice { get; init; }
+
+    public bool IsAdmin { get; init; }
+    public int LostFoundOpenCount { get; init; }
+    public int LostFoundUnderReviewCount { get; init; }
+    public int LostFoundResolvedCount { get; init; }
+    public int LostFoundClaimsLast7Days { get; init; }
+    public IReadOnlyCollection<LostFoundItem> RecentLostFoundItems { get; init; } = Array.Empty<LostFoundItem>();
 }

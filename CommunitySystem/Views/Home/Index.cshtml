@@ -4,48 +4,155 @@
     ViewData["Title"] = "Community Hub";
 }
 
-<section class="hero-section rounded-4 p-4 p-lg-5 mb-5">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-7">
-            <span class="eyebrow">Ren Residence Community System</span>
-            <h1 class="display-5 fw-semibold mt-3 mb-3">View community updates and conversations in one place.</h1>
-            <p class="lead hero-tagline mb-4">
-                Stay informed, connected, and engaged with everything happening at REN Residences.
-            </p>
-            <div class="d-flex flex-wrap gap-3">
-                @if (User.Identity?.IsAuthenticated == true)
+@if (User.Identity?.IsAuthenticated == true && Model.IsAdmin)
+{
+    <section class="hero-section rounded-4 p-4 p-lg-5 mb-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="eyebrow">Admin Console</span>
+                <h1 class="display-5 fw-semibold mt-3 mb-3">Operations overview</h1>
+                <p class="lead hero-tagline mb-4">
+                    Review resident activity, manage announcements, and monitor Lost &amp; Found cases at a glance.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-controller="Notices" asp-action="Index" class="btn btn-primary btn-lg">Manage Notices</a>
+                    <a asp-controller="Posts" asp-action="Index" class="btn btn-outline-light btn-lg">Browse Posts</a>
+                    <a asp-controller="LostFoundLocations" asp-action="Index" class="btn btn-outline-light btn-lg">LF Locations</a>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-card p-4 rounded-4 shadow-sm">
+                    <h2 class="h5 mb-4">Today’s Snapshot</h2>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">Posts</span>
+                            <strong>@Model.TotalPosts</strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">LF Open</span>
+                            <strong>@Model.LostFoundOpenCount</strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">LF Review</span>
+                            <strong>@Model.LostFoundUnderReviewCount</strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">LF Resolved</span>
+                            <strong>@Model.LostFoundResolvedCount</strong>
+                        </div>
+                    </div>
+                    <p class="text-secondary mb-0 mt-4">
+                        Latest post:
+                        <span class="fw-semibold text-light">@(Model.LatestPostTitle ?? "No posts yet")</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="detail-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 mb-0">Recent Posts</h2>
+                    <a asp-controller="Posts" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                @if (Model.RecentPosts.Count == 0)
                 {
-                    <a asp-controller="Posts" asp-action="Index" class="btn btn-primary btn-lg">Browse Posts</a>
-                    <a asp-controller="Posts" asp-action="Create" class="btn btn-outline-light btn-lg">Create New Post</a>
+                    <p class="text-secondary mb-0">No posts yet.</p>
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Log In</a>
-                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">Register</a>
+                    <div class="d-grid gap-3">
+                        @foreach (var post in Model.RecentPosts)
+                        {
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">@post.Title</div>
+                                    <div class="small text-secondary">@post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                                </div>
+                                <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-sm btn-primary">Open</a>
+                            </div>
+                        }
+                    </div>
                 }
             </div>
         </div>
-        <div class="col-lg-5">
-            <div class="hero-card p-4 rounded-4 shadow-sm">
-                <h2 class="h5 mb-4">Platform Snapshot</h2>
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <span class="stat-label">Posts</span>
-                        <strong>@Model.TotalPosts</strong>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-label">Comments</span>
-                        <strong>@Model.TotalComments</strong>
-                    </div>
+
+        <div class="col-lg-6">
+            <div class="detail-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 mb-0">Recent Lost &amp; Found</h2>
+                    <a asp-controller="LostFound" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
-                <p class="text-secondary mb-0 mt-4">
-                    Latest post:
-                    <span class="fw-semibold text-light">@(Model.LatestPostTitle ?? "No posts yet")</span>
-                </p>
+                @if (Model.RecentLostFoundItems.Count == 0)
+                {
+                    <p class="text-secondary mb-0">No lost or found cases yet.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var item in Model.RecentLostFoundItems)
+                        {
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">@item.Title</div>
+                                    <div class="small text-secondary">@item.ListingType · @item.Status · @item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                                </div>
+                                <a asp-controller="LostFound" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Open</a>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         </div>
-    </div>
-</section>
+    </section>
+}
+else
+{
+    <section class="hero-section rounded-4 p-4 p-lg-5 mb-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="eyebrow">Ren Residence Community System</span>
+                <h1 class="display-5 fw-semibold mt-3 mb-3">View community updates and conversations in one place.</h1>
+                <p class="lead hero-tagline mb-4">
+                    Stay informed, connected, and engaged with everything happening at REN Residences.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Posts" asp-action="Index" class="btn btn-primary btn-lg">Browse Posts</a>
+                        <a asp-controller="Posts" asp-action="Create" class="btn btn-outline-light btn-lg">Create New Post</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">Log In</a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg">Register</a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-card p-4 rounded-4 shadow-sm">
+                    <h2 class="h5 mb-4">Platform Snapshot</h2>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">Posts</span>
+                            <strong>@Model.TotalPosts</strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Comments</span>
+                            <strong>@Model.TotalComments</strong>
+                        </div>
+                    </div>
+                    <p class="text-secondary mb-0 mt-4">
+                        Latest post:
+                        <span class="fw-semibold text-light">@(Model.LatestPostTitle ?? "No posts yet")</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+}
 
 @if (User.Identity?.IsAuthenticated == true)
 {

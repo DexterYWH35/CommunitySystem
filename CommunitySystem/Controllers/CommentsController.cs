@@ -259,7 +259,20 @@ public class CommentsController(ApplicationDbContext dbContext, UserManager<Appl
         }
 
         await dbContext.SaveChangesAsync();
+
+        if (IsAjaxRequest(Request))
+        {
+            var likeCount = await dbContext.CommentLikes.CountAsync(like => like.CommentId == id);
+            var hasLiked = await dbContext.CommentLikes.AnyAsync(like => like.CommentId == id && like.UserId == currentUser.Id);
+            return Json(new { commentId = id, likeCount, hasLiked });
+        }
+
         return RedirectToAction("Details", "Posts", new { id = comment.PostId });
+    }
+
+    private static bool IsAjaxRequest(HttpRequest request)
+    {
+        return string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> PostExistsAsync(int postId)

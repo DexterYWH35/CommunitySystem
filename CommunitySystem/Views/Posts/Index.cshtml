@@ -13,7 +13,14 @@
         <h1 class="display-6 fw-semibold">Posts</h1>
         <p class="text-secondary mb-0">Manage community updates, announcements, and internal posts.</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Create Post</a>
+    <a asp-action="Create" class="btn btn-primary btn-iconed">
+        <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </span>
+        Create Post
+    </a>
 </div>
 
 <div class="table-card p-3 p-lg-4">
@@ -53,12 +60,36 @@
                         </div>
                     </td>
                     <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">View</a>
-                        @if (isAdmin || item.OwnerUserId == currentUserId)
-                        {
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                        }
+                        <div class="table-actions">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary btn-iconed">
+                                <span class="btn-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                </span>
+                                View
+                            </a>
+                            @if (isAdmin || item.OwnerUserId == currentUserId)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary btn-iconed">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3L16.5 4a2 2 0 0 0-3 0L3 14.5V20z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger btn-iconed">
+                                    <span class="btn-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M6 7h12M10 7V5h4v2m-7 0l1 14h8l1-14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    Delete
+                                </a>
+                            }
+                        </div>
                     </td>
                 </tr>
             }

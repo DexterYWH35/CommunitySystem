@@ -210,7 +210,17 @@ public class PostsController(
         if (!ModelState.IsValid)
         {
             var invalidViewModel = await BuildPostDetailsViewModelAsync(id, newComment);
-            return invalidViewModel is null ? NotFound() : View("Details", invalidViewModel);
+            if (invalidViewModel is null)
+            {
+                return NotFound();
+            }
+
+            if (IsAjaxRequest(Request))
+            {
+                return PartialView("_PostComments", invalidViewModel);
+            }
+
+            return View("Details", invalidViewModel);
         }
 
         var comment = new Comment
@@ -224,6 +234,12 @@ public class PostsController(
 
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
+
+        if (IsAjaxRequest(Request))
+        {
+            var refreshedViewModel = await BuildPostDetailsViewModelAsync(id);
+            return refreshedViewModel is null ? NotFound() : PartialView("_PostComments", refreshedViewModel);
+        }
 
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -262,7 +278,20 @@ public class PostsController(
         }
 
         await dbContext.SaveChangesAsync();
+
+        if (IsAjaxRequest(Request))
+        {
+            var likeCount = await dbContext.PostLikes.CountAsync(like => like.PostId == id);
+            var hasLiked = await dbContext.PostLikes.AnyAsync(like => like.PostId == id && like.UserId == currentUser.Id);
+            return Json(new { postId = id, likeCount, hasLiked });
+        }
+
         return RedirectToAction(nameof(Details), new { id });
+    }
+
+    private static bool IsAjaxRequest(HttpRequest request)
+    {
+        return string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> CanManagePostAsync(Post post)

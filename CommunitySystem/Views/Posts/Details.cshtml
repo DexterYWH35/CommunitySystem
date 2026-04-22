@@ -16,7 +16,14 @@
     <div class="d-flex gap-2">
         @if (canManagePost)
         {
-            <a asp-action="Edit" asp-route-id="@Model.Post.Id" class="btn btn-outline-secondary">Edit Post</a>
+            <a asp-action="Edit" asp-route-id="@Model.Post.Id" class="btn btn-outline-secondary btn-iconed">
+                <span class="btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 20h4l10.5-10.5a2 2 0 0 0 0-3L16.5 4a2 2 0 0 0-3 0L3 14.5V20z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Edit Post
+            </a>
         }
     </div>
 </div>
@@ -26,86 +33,27 @@
     {
         <img src="@Model.Post.ImagePath" alt="@Model.Post.Title" class="post-image-detail mb-4" />
     }
-    <p class="mb-0">@Model.Post.Content</p>
+    <div class="post-content mb-0">@Model.Post.Content</div>
     <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
-        <form asp-action="ToggleLike" asp-route-id="@Model.Post.Id" method="post" class="d-inline">
+        <form asp-action="ToggleLike" asp-route-id="@Model.Post.Id" method="post" class="d-inline"
+              data-ajax="true" data-ajax-kind="post-like">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn @(Model.HasLikedPost ? "btn-primary" : "btn-outline-primary")">
-                @(Model.HasLikedPost ? "Unlike" : "Like") Post
+            <button type="submit" class="btn btn-iconed @(Model.HasLikedPost ? "btn-primary" : "btn-outline-primary")">
+                <span class="btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21s-7-4.6-9.3-9C.8 8.1 3.1 5 6.7 5c2 0 3.4 1 4.3 2.2C11.9 6 13.3 5 15.3 5c3.6 0 5.9 3.1 4 7-2.3 4.4-9.3 9-9.3 9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span data-like-text>@(Model.HasLikedPost ? "Unlike Post" : "Like Post")</span>
             </button>
         </form>
-        <span class="badge text-bg-light rounded-pill">@Model.PostLikeCount like(s)</span>
+        <span id="post-like-count" class="badge text-bg-light rounded-pill">@Model.PostLikeCount like(s)</span>
     </div>
 </div>
 
-<section>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h4 mb-0">Comments</h2>
-        <span class="badge text-bg-light rounded-pill">@Model.Comments.Count</span>
-    </div>
-
-    @if (Model.Comments.Count == 0)
-    {
-        <div class="comment-card">
-            <p class="mb-0 text-secondary">No comments yet. Start the conversation by adding the first one.</p>
-        </div>
-    }
-    else
-    {
-        <div class="comment-list">
-            @foreach (var comment in Model.Comments)
-            {
-                var canManageComment = User.IsInRole("Admin") || comment.OwnerUserId == currentUserId;
-                <article class="comment-card">
-                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                        <div>
-                            <h3 class="h6 mb-1">@comment.AuthorName</h3>
-                            <p class="small text-secondary mb-0">@comment.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap justify-content-end">
-                            <form asp-controller="Comments" asp-action="ToggleLike" asp-route-id="@comment.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm @(comment.Likes.Any(like => like.UserId == currentUserId) ? "btn-primary" : "btn-outline-primary")">
-                                    @(comment.Likes.Any(like => like.UserId == currentUserId) ? "Unlike" : "Like")
-                                    <span class="ms-1">@comment.Likes.Count</span>
-                                </button>
-                            </form>
-                            <a asp-controller="Comments" asp-action="Details" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-primary">View</a>
-                            @if (canManageComment)
-                            {
-                                <a asp-controller="Comments" asp-action="Edit" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                <a asp-controller="Comments" asp-action="Delete" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                            }
-                        </div>
-                    </div>
-                    <p class="mb-0">@comment.Body</p>
-                </article>
-            }
-        </div>
-    }
-</section>
-<br />
-<section class="form-card p-4 mb-4">
-    @* <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="h4 mb-1">Leave a comment</h2>
-            <p class="text-secondary mb-0">Add your response directly under this post.</p>
-        </div>
-    </div> *@
-
-    <form asp-action="AddComment" asp-route-id="@Model.Post.Id" method="post">
-        <input type="hidden" asp-for="NewComment.PostId" />
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        <div class="mb-3">
-            <label asp-for="NewComment.Body" class="form-label"></label>
-            <textarea asp-for="NewComment.Body" class="form-control" placeholder="Write your comment here..."></textarea>
-            <span asp-validation-for="NewComment.Body" class="text-danger"></span>
-        </div>
-        <div class="d-flex gap-3">
-            <button type="submit" class="btn btn-primary">Post Comment</button>
-        </div>
-    </form>
-</section>
+<div id="post-comments">
+    <partial name="_PostComments" model="Model" />
+</div>
 
 
 

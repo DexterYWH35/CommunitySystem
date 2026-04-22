@@ -170,6 +170,94 @@ public static class DatabaseInitializer
         {
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "Notices" ADD COLUMN "IsFeatured" INTEGER NOT NULL DEFAULT 0;""");
         }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "LostFoundItems" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_LostFoundItems" PRIMARY KEY AUTOINCREMENT,
+                "Title" TEXT NOT NULL,
+                "Description" TEXT NOT NULL,
+                "Category" TEXT NOT NULL,
+                "LocationDetails" TEXT NOT NULL,
+                "ListingType" INTEGER NOT NULL,
+                "Status" INTEGER NOT NULL DEFAULT 1,
+                "IncidentDateUtc" TEXT NULL,
+                "ContactName" TEXT NOT NULL,
+                "ContactEmail" TEXT NULL,
+                "ContactPhone" TEXT NULL,
+                "ImagePath" TEXT NULL,
+                "ReporterUserId" TEXT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NULL,
+                CONSTRAINT "FK_LostFoundItems_AspNetUsers_ReporterUserId" FOREIGN KEY ("ReporterUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE TABLE IF NOT EXISTS "LostFoundClaims" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_LostFoundClaims" PRIMARY KEY AUTOINCREMENT,
+                "LostFoundItemId" INTEGER NOT NULL,
+                "ClaimerUserId" TEXT NULL,
+                "ClaimantName" TEXT NOT NULL,
+                "ClaimantEmail" TEXT NOT NULL,
+                "ClaimantPhone" TEXT NOT NULL,
+                "VerificationDetails" TEXT NOT NULL,
+                "PreferredContactMethod" TEXT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_LostFoundClaims_LostFoundItems_LostFoundItemId" FOREIGN KEY ("LostFoundItemId") REFERENCES "LostFoundItems" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_LostFoundClaims_AspNetUsers_ClaimerUserId" FOREIGN KEY ("ClaimerUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_LostFoundItems_ReporterUserId" ON "LostFoundItems" ("ReporterUserId");
+            CREATE INDEX IF NOT EXISTS "IX_LostFoundClaims_LostFoundItemId" ON "LostFoundClaims" ("LostFoundItemId");
+            CREATE INDEX IF NOT EXISTS "IX_LostFoundClaims_ClaimerUserId" ON "LostFoundClaims" ("ClaimerUserId");
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_LostFoundClaims_LostFoundItemId_ClaimerUserId"
+                ON "LostFoundClaims" ("LostFoundItemId", "ClaimerUserId")
+                WHERE "ClaimerUserId" IS NOT NULL;
+            """
+        );
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundItems", "Status"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundItems" ADD COLUMN "Status" INTEGER NOT NULL DEFAULT 1;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundItems", "IncidentDateUtc"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundItems" ADD COLUMN "IncidentDateUtc" TEXT NULL;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundItems", "ContactPhone"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundItems" ADD COLUMN "ContactPhone" TEXT NULL;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "PreferredContactMethod"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "PreferredContactMethod" TEXT NULL;""");
+        }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "LostFoundLocationPresets" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_LostFoundLocationPresets" PRIMARY KEY AUTOINCREMENT,
+                "Name" TEXT NOT NULL,
+                "IsActive" INTEGER NOT NULL DEFAULT 1,
+                "DisplayOrder" INTEGER NOT NULL DEFAULT 0,
+                "CreatedAtUtc" TEXT NOT NULL
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_LostFoundLocationPresets_Name" ON "LostFoundLocationPresets" ("Name");
+            """
+        );
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundLocationPresets", "IsActive"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundLocationPresets" ADD COLUMN "IsActive" INTEGER NOT NULL DEFAULT 1;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundLocationPresets", "DisplayOrder"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundLocationPresets" ADD COLUMN "DisplayOrder" INTEGER NOT NULL DEFAULT 0;""");
+        }
     }
 
     private static async Task<bool> TableExistsAsync(ApplicationDbContext dbContext, string tableName)

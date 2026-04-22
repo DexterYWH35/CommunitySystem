@@ -11,6 +11,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PostLike> PostLikes => Set<PostLike>();
     public DbSet<CommentLike> CommentLikes => Set<CommentLike>();
     public DbSet<Notice> Notices => Set<Notice>();
+    public DbSet<LostFoundItem> LostFoundItems => Set<LostFoundItem>();
+    public DbSet<LostFoundClaim> LostFoundClaims => Set<LostFoundClaim>();
+    public DbSet<LostFoundLocationPreset> LostFoundLocationPresets => Set<LostFoundLocationPreset>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +118,85 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.Property(notice => notice.AttachmentName)
                 .HasMaxLength(180);
+        });
+
+        modelBuilder.Entity<LostFoundItem>(entity =>
+        {
+            entity.Property(item => item.Title)
+                .HasMaxLength(120);
+
+            entity.Property(item => item.Description)
+                .HasMaxLength(3000);
+
+            entity.Property(item => item.Category)
+                .HasMaxLength(80);
+
+            entity.Property(item => item.LocationDetails)
+                .HasMaxLength(160);
+
+            entity.Property(item => item.ContactName)
+                .HasMaxLength(80);
+
+            entity.Property(item => item.ContactEmail)
+                .HasMaxLength(120);
+
+            entity.Property(item => item.ContactPhone)
+                .HasMaxLength(30);
+
+            entity.Property(item => item.ImagePath)
+                .HasMaxLength(260);
+
+            entity.Property(item => item.ReporterUserId)
+                .HasMaxLength(450);
+
+            entity.HasOne(item => item.ReporterUser)
+                .WithMany(user => user.LostFoundItems)
+                .HasForeignKey(item => item.ReporterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(item => item.Claims)
+                .WithOne(claim => claim.LostFoundItem)
+                .HasForeignKey(claim => claim.LostFoundItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LostFoundClaim>(entity =>
+        {
+            entity.Property(claim => claim.ClaimerUserId)
+                .HasMaxLength(450);
+
+            entity.Property(claim => claim.ClaimantName)
+                .HasMaxLength(80);
+
+            entity.Property(claim => claim.ClaimantEmail)
+                .HasMaxLength(120);
+
+            entity.Property(claim => claim.ClaimantPhone)
+                .HasMaxLength(30);
+
+            entity.Property(claim => claim.VerificationDetails)
+                .HasMaxLength(1500);
+
+            entity.Property(claim => claim.PreferredContactMethod)
+                .HasMaxLength(40);
+
+            entity.HasIndex(claim => new { claim.LostFoundItemId, claim.ClaimerUserId })
+                .IsUnique()
+                .HasFilter("\"ClaimerUserId\" IS NOT NULL");
+
+            entity.HasOne(claim => claim.ClaimerUser)
+                .WithMany(user => user.LostFoundClaims)
+                .HasForeignKey(claim => claim.ClaimerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LostFoundLocationPreset>(entity =>
+        {
+            entity.Property(location => location.Name)
+                .HasMaxLength(160);
+
+            entity.HasIndex(location => location.Name)
+                .IsUnique();
         });
     }
 }

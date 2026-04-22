@@ -1,0 +1,22 @@
+@model CommunitySystem.Models.LostFoundLocationPreset
+
+@{
+    ViewData["Title"] = "Delete Lost & Found Location";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Admin</span>
+    <h1 class="display-6 fw-semibold">Delete location preset</h1>
+    <p class="text-secondary mb-0">This removes the preset from the dropdown. Existing item records will keep their saved location text.</p>
+</div>
+
+<div class="detail-card p-4">
+    <h2 class="h5 mb-3">@Model.Name</h2>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

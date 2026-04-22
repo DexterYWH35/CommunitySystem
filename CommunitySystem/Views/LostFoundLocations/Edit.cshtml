@@ -1,0 +1,44 @@
+@model CommunitySystem.ViewModels.LostFoundLocationPresetFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Lost & Found Location";
+}
+
+<div class="page-header">
+    <span class="eyebrow">Admin</span>
+    <h1 class="display-6 fw-semibold">Edit location preset</h1>
+    <p class="text-secondary mb-0">Update the label or order shown in the Lost &amp; Found location dropdown.</p>
+</div>
+
+<div class="form-card p-4">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DisplayOrder" class="form-label"></label>
+                <input asp-for="DisplayOrder" class="form-control" />
+                <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
