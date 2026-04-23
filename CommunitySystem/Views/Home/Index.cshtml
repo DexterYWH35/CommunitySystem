@@ -12,34 +12,47 @@
                 <span class="eyebrow">Admin Console</span>
                 <h1 class="display-5 fw-semibold mt-3 mb-3">Operations overview</h1>
                 <p class="lead hero-tagline mb-4">
-                    Review resident activity, manage announcements, and monitor Lost &amp; Found cases at a glance.
+                    Review resident activity, manage announcements, and monitor complaints and Lost &amp; Found cases at a glance.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a asp-controller="Notices" asp-action="Index" class="btn btn-primary btn-lg">Manage Notices</a>
+                    <a asp-controller="Notices" asp-action="Index" class="btn btn-outline-light btn-lg">Manage Notices</a>
                     <a asp-controller="Posts" asp-action="Index" class="btn btn-outline-light btn-lg">Browse Posts</a>
-                    <a asp-controller="LostFoundLocations" asp-action="Index" class="btn btn-outline-light btn-lg">LF Locations</a>
+                    <a asp-controller="Complaints" asp-action="Dashboard" class="btn btn-outline-light btn-lg">Complaint Dashboard</a>
+                    @* <a asp-controller="LostFoundLocations" asp-action="Index" class="btn btn-outline-light btn-lg">LF Locations</a> *@
                 </div>
             </div>
             <div class="col-lg-5">
                 <div class="hero-card p-4 rounded-4 shadow-sm">
                     <h2 class="h5 mb-4">Today’s Snapshot</h2>
                     <div class="stat-grid">
-                        <div class="stat-card">
+                        @* <div class="stat-card">
                             <span class="stat-label">Posts</span>
                             <strong>@Model.TotalPosts</strong>
+                        </div> *@
+                        <div class="stat-card">
+                            <span class="stat-label">Notice</span>
+                            <strong>@Model.NoticeCount</strong>
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">LF Open</span>
                             <strong>@Model.LostFoundOpenCount</strong>
                         </div>
-                        <div class="stat-card">
+                        @* <div class="stat-card">
                             <span class="stat-label">LF Review</span>
                             <strong>@Model.LostFoundUnderReviewCount</strong>
                         </div>
                         <div class="stat-card">
                             <span class="stat-label">LF Resolved</span>
                             <strong>@Model.LostFoundResolvedCount</strong>
+                        </div> *@
+                        <div class="stat-card">
+                            <span class="stat-label">Complaints Open</span>
+                            <strong>@Model.ComplaintOpenCount</strong>
                         </div>
+                        @* <div class="stat-card">
+                            <span class="stat-label">Complaints Done</span>
+                            <strong>@Model.ComplaintCompletedCount</strong>
+                        </div> *@
                     </div>
                     <p class="text-secondary mb-0 mt-4">
                         Latest post:
@@ -51,7 +64,7 @@
     </section>
 
     <section class="row g-4 mb-5">
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="detail-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h4 mb-0">Recent Posts</h2>
@@ -79,7 +92,35 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-lg-4">
+            <div class="detail-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 mb-0">Recent Complaints</h2>
+                    <a asp-controller="Complaints" asp-action="Dashboard" class="btn btn-sm btn-outline-primary">Dashboard</a>
+                </div>
+                @if (Model.RecentComplaints.Count == 0)
+                {
+                    <p class="text-secondary mb-0">No complaints yet.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-3">
+                        @foreach (var item in Model.RecentComplaints)
+                        {
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">@item.Title</div>
+                                    <div class="small text-secondary">@item.Status · @item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                                </div>
+                                <a asp-controller="Complaints" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Open</a>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
             <div class="detail-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h4 mb-0">Recent Lost &amp; Found</h2>

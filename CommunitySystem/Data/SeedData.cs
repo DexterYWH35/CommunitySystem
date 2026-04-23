@@ -62,6 +62,7 @@ public static class SeedData
             await SeedNoticesAsync(dbContext);
             await SeedLostFoundAsync(dbContext, adminUser, standardUser);
             await SeedLostFoundLocationsAsync(dbContext);
+            await SeedComplaintLabelsAsync(dbContext);
             return;
         }
 
@@ -129,6 +130,7 @@ public static class SeedData
         await SeedNoticesAsync(dbContext);
         await SeedLostFoundAsync(dbContext, adminUser, standardUser);
         await SeedLostFoundLocationsAsync(dbContext);
+        await SeedComplaintLabelsAsync(dbContext);
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(
@@ -228,6 +230,24 @@ public static class SeedData
                 IsPinned = true,
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-2)
             });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedComplaintLabelsAsync(ApplicationDbContext dbContext)
+    {
+        if (await dbContext.ComplaintLabels.AnyAsync())
+        {
+            return;
+        }
+
+        dbContext.ComplaintLabels.AddRange(
+            new ComplaintLabel { Name = "Facilities", CreatedAtUtc = DateTime.UtcNow },
+            new ComplaintLabel { Name = "Environment", CreatedAtUtc = DateTime.UtcNow },
+            new ComplaintLabel { Name = "Security", CreatedAtUtc = DateTime.UtcNow },
+            new ComplaintLabel { Name = "Parking", CreatedAtUtc = DateTime.UtcNow },
+            new ComplaintLabel { Name = "Noise", CreatedAtUtc = DateTime.UtcNow },
+            new ComplaintLabel { Name = "Others", CreatedAtUtc = DateTime.UtcNow });
 
         await dbContext.SaveChangesAsync();
     }

@@ -6,6 +6,7 @@ public class HomeIndexViewModel
 {
     public int TotalPosts { get; init; }
     public int TotalComments { get; init; }
+    public int NoticeCount { get; init; }
     public string? LatestPostTitle { get; init; }
     public IReadOnlyCollection<Post> RecentPosts { get; init; } = Array.Empty<Post>();
     public IReadOnlyCollection<Post> MostLikedPosts { get; init; } = Array.Empty<Post>();
@@ -18,4 +19,8 @@ public class HomeIndexViewModel
     public int LostFoundResolvedCount { get; init; }
     public int LostFoundClaimsLast7Days { get; init; }
     public IReadOnlyCollection<LostFoundItem> RecentLostFoundItems { get; init; } = Array.Empty<LostFoundItem>();
+
+    public int ComplaintOpenCount { get; init; }
+    public int ComplaintCompletedCount { get; init; }
+    public IReadOnlyCollection<ComplaintCase> RecentComplaints { get; init; } = Array.Empty<ComplaintCase>();
 }

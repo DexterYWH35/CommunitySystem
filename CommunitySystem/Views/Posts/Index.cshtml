@@ -5,6 +5,7 @@
     ViewData["Title"] = "Posts";
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var isAdmin = User.IsInRole("Admin");
+    var searchTerm = ViewData["SearchTerm"] as string;
 }
 
 <div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
@@ -24,6 +25,28 @@
 </div>
 
 <div class="table-card p-3 p-lg-4">
+    <form method="get" class="d-flex flex-column flex-md-row gap-2 align-items-md-end mb-3">
+        <div class="flex-grow-1">
+            <label class="form-label text-secondary mb-1">Search</label>
+            <input type="search"
+                   name="q"
+                   value="@searchTerm"
+                   class="form-control"
+                   placeholder="Search title, author, content..."
+                   autocomplete="off" />
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            <a asp-action="Index" class="btn btn-link text-decoration-none">Reset</a>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">No posts found.</div>
+    }
+    else
+    {
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead>
@@ -96,4 +119,5 @@
             </tbody>
         </table>
     </div>
+    }
 </div>

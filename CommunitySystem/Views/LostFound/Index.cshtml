@@ -3,6 +3,8 @@
 
 @{
     ViewData["Title"] = "Lost & Found";
+    var searchTerm = ViewData["SearchTerm"] as string;
+    var statusRaw = Context.Request.Query["status"].ToString();
 }
 
 <section class="lf-shell">
@@ -35,6 +37,26 @@
             }
         </div>
     </div>
+
+    <form method="get" class="d-flex flex-column flex-md-row gap-2 align-items-md-end mb-4">
+        @if (!string.IsNullOrWhiteSpace(statusRaw))
+        {
+            <input type="hidden" name="status" value="@statusRaw" />
+        }
+        <div class="flex-grow-1">
+            <label class="form-label text-secondary mb-1">Search listings</label>
+            <input type="search"
+                   name="q"
+                   value="@searchTerm"
+                   class="form-control"
+                   placeholder="Search title, category, description..."
+                   autocomplete="off" />
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            <a asp-action="Index" class="btn btn-link text-decoration-none">Reset</a>
+        </div>
+    </form>
 
     <div class="lf-overview mb-4">
         <article class="lf-overview-card">

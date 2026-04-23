@@ -18,7 +18,7 @@ public class LostFoundController(
 {
     private const string OtherLocationValue = "__OTHER__";
 
-    public async Task<IActionResult> Index(LostFoundItemStatus? status = null)
+    public async Task<IActionResult> Index(LostFoundItemStatus? status = null, string? q = null)
     {
         var query = dbContext.LostFoundItems
             .AsNoTracking()
@@ -30,11 +30,26 @@ public class LostFoundController(
             query = query.Where(item => item.Status == status.Value);
         }
 
+        var searchTerm = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+        if (searchTerm is not null)
+        {
+            var pattern = $"%{searchTerm}%";
+            query = query.Where(item =>
+                EF.Functions.Like(item.Title, pattern) ||
+                (item.Description != null && EF.Functions.Like(item.Description, pattern)) ||
+                (item.Category != null && EF.Functions.Like(item.Category, pattern)) ||
+                (item.LocationDetails != null && EF.Functions.Like(item.LocationDetails, pattern)) ||
+                (item.ContactName != null && EF.Functions.Like(item.ContactName, pattern)) ||
+                (item.ContactEmail != null && EF.Functions.Like(item.ContactEmail, pattern)) ||
+                (item.ContactPhone != null && EF.Functions.Like(item.ContactPhone, pattern)));
+        }
+
         var items = await query
             .OrderBy(item => item.Status == LostFoundItemStatus.Resolved)
             .ThenByDescending(item => item.CreatedAtUtc)
             .ToListAsync();
 
+        ViewData["SearchTerm"] = searchTerm;
         return View(items);
     }
 

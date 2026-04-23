@@ -1,0 +1,156 @@
+@model CommunitySystem.Models.ComplaintCase
+
+@{
+    var isAdmin = User.IsInRole("Admin");
+    ViewData["Title"] = $"Complaint #{Model.Id}";
+    var selectedLabelIds = (int[]?)ViewBag.SelectedLabelIds ?? Array.Empty<int>();
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">@Model.Title</h1>
+        <div class="text-secondary">Case #@Model.Id · @Model.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge @(Model.Status == ComplaintCaseStatus.Completed ? "bg-success" : "bg-warning text-dark")">
+                        @Model.Status
+                    </span>
+                    <span class="badge bg-light text-dark border">Location: @Model.LocationDetails</span>
+                    @foreach (var link in Model.Labels)
+                    {
+                        if (link.ComplaintLabel is null)
+                        {
+                            continue;
+                        }
+                        <span class="badge bg-info text-dark">@link.ComplaintLabel.Name</span>
+                    }
+                </div>
+
+                <h2 class="h5">Description</h2>
+                <p class="mb-0" style="white-space: pre-wrap;">@Model.Description</p>
+            </div>
+        </div>
+
+        @if (Model.Images.Count > 0)
+        {
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Images</h2>
+                    <div class="row g-3">
+                        @foreach (var image in Model.Images)
+                        {
+                            <div class="col-6 col-md-4">
+                                <a href="@image.ImagePath" target="_blank" class="d-block">
+                                    <img src="@image.ImagePath" class="img-fluid rounded border" alt="Complaint image" />
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        @if (isAdmin)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Admin Actions</h2>
+                    <form asp-action="UpdateStatus" method="post">
+                        <input type="hidden" name="Id" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="Status" class="form-select" asp-items="ViewBag.StatusOptions"></select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Labels</label>
+                            <select name="SelectedLabelIds" class="form-select" multiple size="6" asp-items="ViewBag.LabelOptions">
+                            </select>
+                            <div class="form-text">Hold Ctrl (Windows) / Cmd (Mac) to select multiple.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New labels (comma separated)</label>
+                            <input name="NewLabels" class="form-control" placeholder="e.g. Noise, Security, Parking" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Remarks (admin only)</label>
+                            <textarea name="Remarks" class="form-control" rows="4" placeholder="Optional internal notes..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Update Case</button>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.Updates.Count > 0)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Update History</h2>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var update in Model.Updates)
+                            {
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <div class="fw-semibold">@update.Status</div>
+                                        <div class="text-secondary small">@update.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(update.Remarks))
+                                    {
+                                        <div class="mt-2" style="white-space: pre-wrap;">@update.Remarks</div>
+                                    }
+                                    <div class="text-secondary small mt-2">
+                                        Updated by: @(update.UpdatedByUser?.Email ?? update.UpdatedByUserId)
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        @if (isAdmin && Model.ReporterUser is not null)
+        {
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Reporter</h2>
+                    <div class="text-secondary small">User ID</div>
+                    <div class="mb-2">@Model.ReporterUserId</div>
+                    <div class="text-secondary small">Email</div>
+                    <div>@Model.ReporterUser.Email</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        (function () {
+            var selected = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(selectedLabelIds));
+            var select = document.querySelector('select[name="SelectedLabelIds"]');
+            if (!select || !selected) return;
+            for (var i = 0; i < select.options.length; i++) {
+                var option = select.options[i];
+                var value = parseInt(option.value, 10);
+                if (selected.indexOf(value) !== -1) option.selected = true;
+            }
+        })();
+    </script>
+}

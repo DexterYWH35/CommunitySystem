@@ -1,0 +1,79 @@
+@model CommunitySystem.ViewModels.ComplaintDashboardViewModel
+
+@{
+    ViewData["Title"] = "Complaints Dashboard";
+    var statusValues = Enum.GetValues<ComplaintCaseStatus>();
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="mb-1">Complaints Dashboard</h1>
+        <p class="text-secondary mb-0">Overview of complaint cases and recent activity.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">All Cases</a>
+        <a asp-action="Create" class="btn btn-primary">New Complaint</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="text-secondary small">Total cases</div>
+                <div class="display-6">@Model.TotalCases</div>
+            </div>
+        </div>
+    </div>
+    @foreach (var status in statusValues)
+    {
+        var count = Model.CasesByStatus.TryGetValue(status, out var value) ? value : 0;
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="text-secondary small">@status</div>
+                    <div class="display-6">@count</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Recent cases</h2>
+
+        @if (Model.RecentCases.Count == 0)
+        {
+            <div class="text-secondary">No cases yet.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th class="text-end">Created</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model.RecentCases)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold text-decoration-none">@item.Title</a>
+                                <div class="text-secondary small">Case #@item.Id</div>
+                            </td>
+                            <td>@item.Status</td>
+                            <td class="text-end text-secondary">@item.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+

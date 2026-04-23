@@ -59,9 +59,15 @@ public class HomeController : Controller
         var lostFoundResolvedCount = 0;
         var lostFoundClaimsLast7Days = 0;
         var recentLostFoundItems = new List<LostFoundItem>();
+        var complaintOpenCount = 0;
+        var complaintCompletedCount = 0;
+        var recentComplaints = new List<ComplaintCase>();
+        var noticeCount = 0;
 
         if (User.Identity?.IsAuthenticated == true && isAdmin)
         {
+            noticeCount = await _dbContext.Notices.CountAsync();
+
             lostFoundOpenCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.Open);
             lostFoundUnderReviewCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.ClaimUnderReview);
             lostFoundResolvedCount = await _dbContext.LostFoundItems.CountAsync(item => item.Status == LostFoundItemStatus.Resolved);
@@ -74,12 +80,23 @@ public class HomeController : Controller
                 .OrderByDescending(item => item.CreatedAtUtc)
                 .Take(5)
                 .ToListAsync();
+
+            complaintOpenCount = await _dbContext.ComplaintCases.CountAsync(item =>
+                item.Status == ComplaintCaseStatus.Reviewing || item.Status == ComplaintCaseStatus.Processing);
+            complaintCompletedCount = await _dbContext.ComplaintCases.CountAsync(item => item.Status == ComplaintCaseStatus.Completed);
+
+            recentComplaints = await _dbContext.ComplaintCases
+                .AsNoTracking()
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(5)
+                .ToListAsync();
         }
 
         var viewModel = new HomeIndexViewModel
         {
             TotalPosts = await _dbContext.Posts.CountAsync(),
             TotalComments = await _dbContext.Comments.CountAsync(),
+            NoticeCount = noticeCount,
             LatestPostTitle = recentPosts.FirstOrDefault()?.Title,
             RecentPosts = recentPosts,
             MostLikedPosts = mostLikedPosts,
@@ -90,7 +107,10 @@ public class HomeController : Controller
             LostFoundUnderReviewCount = lostFoundUnderReviewCount,
             LostFoundResolvedCount = lostFoundResolvedCount,
             LostFoundClaimsLast7Days = lostFoundClaimsLast7Days,
-            RecentLostFoundItems = recentLostFoundItems
+            RecentLostFoundItems = recentLostFoundItems,
+            ComplaintOpenCount = complaintOpenCount,
+            ComplaintCompletedCount = complaintCompletedCount,
+            RecentComplaints = recentComplaints
         };
 
         return View(viewModel);

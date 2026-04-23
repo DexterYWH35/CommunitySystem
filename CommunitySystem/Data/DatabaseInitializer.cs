@@ -258,6 +258,73 @@ public static class DatabaseInitializer
         {
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundLocationPresets" ADD COLUMN "DisplayOrder" INTEGER NOT NULL DEFAULT 0;""");
         }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "ComplaintCases" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_ComplaintCases" PRIMARY KEY AUTOINCREMENT,
+                "Title" TEXT NOT NULL,
+                "Description" TEXT NOT NULL,
+                "LocationDetails" TEXT NOT NULL,
+                "Status" INTEGER NOT NULL DEFAULT 1,
+                "ReporterUserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NULL,
+                CONSTRAINT "FK_ComplaintCases_AspNetUsers_ReporterUserId" FOREIGN KEY ("ReporterUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE TABLE IF NOT EXISTS "ComplaintCaseImages" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_ComplaintCaseImages" PRIMARY KEY AUTOINCREMENT,
+                "ComplaintCaseId" INTEGER NOT NULL,
+                "ImagePath" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_ComplaintCaseImages_ComplaintCases_ComplaintCaseId" FOREIGN KEY ("ComplaintCaseId") REFERENCES "ComplaintCases" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_ComplaintCases_ReporterUserId" ON "ComplaintCases" ("ReporterUserId");
+            CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseImages_ComplaintCaseId" ON "ComplaintCaseImages" ("ComplaintCaseId");
+            """
+        );
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "ComplaintLabels" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_ComplaintLabels" PRIMARY KEY AUTOINCREMENT,
+                "Name" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_ComplaintLabels_Name" ON "ComplaintLabels" ("Name");
+
+            CREATE TABLE IF NOT EXISTS "ComplaintCaseLabels" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_ComplaintCaseLabels" PRIMARY KEY AUTOINCREMENT,
+                "ComplaintCaseId" INTEGER NOT NULL,
+                "ComplaintLabelId" INTEGER NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_ComplaintCaseLabels_ComplaintCases_ComplaintCaseId" FOREIGN KEY ("ComplaintCaseId") REFERENCES "ComplaintCases" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_ComplaintCaseLabels_ComplaintLabels_ComplaintLabelId" FOREIGN KEY ("ComplaintLabelId") REFERENCES "ComplaintLabels" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_ComplaintCaseLabels_ComplaintCaseId_ComplaintLabelId"
+                ON "ComplaintCaseLabels" ("ComplaintCaseId", "ComplaintLabelId");
+
+            CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseLabels_ComplaintLabelId" ON "ComplaintCaseLabels" ("ComplaintLabelId");
+
+            CREATE TABLE IF NOT EXISTS "ComplaintCaseUpdates" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_ComplaintCaseUpdates" PRIMARY KEY AUTOINCREMENT,
+                "ComplaintCaseId" INTEGER NOT NULL,
+                "Status" INTEGER NOT NULL,
+                "Remarks" TEXT NULL,
+                "UpdatedByUserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_ComplaintCaseUpdates_ComplaintCases_ComplaintCaseId" FOREIGN KEY ("ComplaintCaseId") REFERENCES "ComplaintCases" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_ComplaintCaseUpdates_AspNetUsers_UpdatedByUserId" FOREIGN KEY ("UpdatedByUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseUpdates_ComplaintCaseId" ON "ComplaintCaseUpdates" ("ComplaintCaseId");
+            CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseUpdates_UpdatedByUserId" ON "ComplaintCaseUpdates" ("UpdatedByUserId");
+            """
+        );
     }
 
     private static async Task<bool> TableExistsAsync(ApplicationDbContext dbContext, string tableName)

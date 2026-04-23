@@ -14,6 +14,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LostFoundItem> LostFoundItems => Set<LostFoundItem>();
     public DbSet<LostFoundClaim> LostFoundClaims => Set<LostFoundClaim>();
     public DbSet<LostFoundLocationPreset> LostFoundLocationPresets => Set<LostFoundLocationPreset>();
+    public DbSet<ComplaintCase> ComplaintCases => Set<ComplaintCase>();
+    public DbSet<ComplaintCaseImage> ComplaintCaseImages => Set<ComplaintCaseImage>();
+    public DbSet<ComplaintLabel> ComplaintLabels => Set<ComplaintLabel>();
+    public DbSet<ComplaintCaseLabel> ComplaintCaseLabels => Set<ComplaintCaseLabel>();
+    public DbSet<ComplaintCaseUpdate> ComplaintCaseUpdates => Set<ComplaintCaseUpdate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -197,6 +202,87 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(location => location.Name)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<ComplaintCase>(entity =>
+        {
+            entity.Property(complaint => complaint.Title)
+                .HasMaxLength(120);
+
+            entity.Property(complaint => complaint.Description)
+                .HasMaxLength(3000);
+
+            entity.Property(complaint => complaint.LocationDetails)
+                .HasMaxLength(160);
+
+            entity.Property(complaint => complaint.ReporterUserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(complaint => complaint.ReporterUserId);
+
+            entity.HasOne(complaint => complaint.ReporterUser)
+                .WithMany(user => user.ComplaintCases)
+                .HasForeignKey(complaint => complaint.ReporterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(complaint => complaint.Images)
+                .WithOne(image => image.ComplaintCase)
+                .HasForeignKey(image => image.ComplaintCaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(complaint => complaint.Labels)
+                .WithOne(link => link.ComplaintCase)
+                .HasForeignKey(link => link.ComplaintCaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(complaint => complaint.Updates)
+                .WithOne(update => update.ComplaintCase)
+                .HasForeignKey(update => update.ComplaintCaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ComplaintCaseImage>(entity =>
+        {
+            entity.Property(image => image.ImagePath)
+                .HasMaxLength(260);
+
+            entity.HasIndex(image => image.ComplaintCaseId);
+        });
+
+        modelBuilder.Entity<ComplaintLabel>(entity =>
+        {
+            entity.Property(label => label.Name)
+                .HasMaxLength(80);
+
+            entity.HasIndex(label => label.Name)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<ComplaintCaseLabel>(entity =>
+        {
+            entity.HasIndex(link => new { link.ComplaintCaseId, link.ComplaintLabelId })
+                .IsUnique();
+
+            entity.HasOne(link => link.ComplaintLabel)
+                .WithMany(label => label.Cases)
+                .HasForeignKey(link => link.ComplaintLabelId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ComplaintCaseUpdate>(entity =>
+        {
+            entity.Property(update => update.Remarks)
+                .HasMaxLength(1500);
+
+            entity.Property(update => update.UpdatedByUserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(update => update.ComplaintCaseId);
+
+            entity.HasOne(update => update.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(update => update.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

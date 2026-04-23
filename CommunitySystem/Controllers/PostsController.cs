@@ -15,15 +15,29 @@ public class PostsController(
     UserManager<ApplicationUser> userManager,
     IWebHostEnvironment webHostEnvironment) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? q = null)
     {
-        var posts = await dbContext.Posts
+        var query = dbContext.Posts
             .AsNoTracking()
             .Include(post => post.Comments)
             .Include(post => post.Likes)
+            .AsQueryable();
+
+        var searchTerm = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+        if (searchTerm is not null)
+        {
+            var pattern = $"%{searchTerm}%";
+            query = query.Where(post =>
+                EF.Functions.Like(post.Title, pattern) ||
+                EF.Functions.Like(post.AuthorName, pattern) ||
+                (post.Content != null && EF.Functions.Like(post.Content, pattern)));
+        }
+
+        var posts = await query
             .OrderByDescending(post => post.CreatedAtUtc)
             .ToListAsync();
 
+        ViewData["SearchTerm"] = searchTerm;
         return View(posts);
     }
 
