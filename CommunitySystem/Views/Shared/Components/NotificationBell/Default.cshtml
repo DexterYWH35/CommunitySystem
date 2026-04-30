@@ -1,0 +1,18 @@
+@model int
+
+<li class="nav-item">
+    <a class="nav-link position-relative" asp-controller="Notifications" asp-action="Index" asp-route-unreadOnly="true" title="Notifications">
+        <span class="visually-hidden">Notifications</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+            <path d="M12 22a2.5 2.5 0 0 0 2.4-2H9.6A2.5 2.5 0 0 0 12 22Z" fill="currentColor" opacity=".9"/>
+            <path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 2h16l-2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        @if (Model > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">
+                @(Model > 99 ? "99+" : Model.ToString())
+                <span class="visually-hidden">unread notifications</span>
+            </span>
+        }
+    </a>
+</li>

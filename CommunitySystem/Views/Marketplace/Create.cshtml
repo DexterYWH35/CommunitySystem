@@ -1,0 +1,69 @@
+@model CommunitySystem.ViewModels.MarketplaceItemFormViewModel
+@using CommunitySystem.Models.Marketplace
+
+@{
+    ViewData["Title"] = "Create Listing";
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Marketplace</span>
+        <h1 class="display-6 fw-semibold">Create listing</h1>
+        <p class="text-secondary mb-0">Add details, pricing and images. Optionally include your e-wallet QR code.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="col-12">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="6"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="ListingType" class="form-label"></label>
+            <select asp-for="ListingType" class="form-select" asp-items="Html.GetEnumSelectList<MarketplaceListingType>()"></select>
+            <span asp-validation-for="ListingType" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="ImageFiles" class="form-label"></label>
+            <input asp-for="ImageFiles" type="file" class="form-control" accept="image/*" multiple />
+            <span asp-validation-for="ImageFiles" class="text-danger"></span>
+            <div class="form-text">Up to 6 images.</div>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="PaymentQrCodeFile" class="form-label"></label>
+            <input asp-for="PaymentQrCodeFile" type="file" class="form-control" accept="image/*" />
+            <span asp-validation-for="PaymentQrCodeFile" class="text-danger"></span>
+            <div class="form-text">This is shown on the item details page for buyers to pay directly.</div>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

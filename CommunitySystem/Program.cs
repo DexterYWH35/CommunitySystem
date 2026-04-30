@@ -2,6 +2,7 @@ using CommunitySystem.Data;
 using CommunitySystem.Models;
 using CommunitySystem.Security;
 using CommunitySystem.Services.External;
+using CommunitySystem.Services.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 builder.Services.AddScoped<IExternalIntegrationService, NullExternalIntegrationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 

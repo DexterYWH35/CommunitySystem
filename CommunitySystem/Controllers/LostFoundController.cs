@@ -1,6 +1,8 @@
 using CommunitySystem.Data;
 using CommunitySystem.Models;
+using CommunitySystem.Models.Notifications;
 using CommunitySystem.Security;
+using CommunitySystem.Services.Notifications;
 using CommunitySystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,9 +16,11 @@ namespace CommunitySystem.Controllers;
 public class LostFoundController(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IWebHostEnvironment webHostEnvironment) : Controller
+    IWebHostEnvironment webHostEnvironment,
+    INotificationService notificationService) : Controller
 {
     private const string OtherLocationValue = "__OTHER__";
+    private const string OtherCategoryValue = "__OTHER__";
 
     public async Task<IActionResult> Index(LostFoundItemStatus? status = null, string? q = null)
     {
@@ -83,17 +87,20 @@ public class LostFoundController(
 
         await PopulateLostFoundDropdownsAsync();
         NormalizeLocationDetails(viewModel);
+        NormalizeCategory(viewModel);
 
         if (!ModelState.IsValid)
         {
             return View(viewModel);
         }
 
+        var resolvedCategory = ResolveCategory(viewModel);
+
         var item = new LostFoundItem
         {
             Title = viewModel.Title,
             Description = viewModel.Description,
-            Category = viewModel.Category,
+            Category = resolvedCategory,
             LocationDetails = viewModel.LocationDetails,
             ListingType = viewModel.ListingType,
             IncidentDateUtc = viewModel.IncidentDateUtc?.Date,
@@ -129,13 +136,21 @@ public class LostFoundController(
             return Forbid();
         }
 
-        await PopulateLostFoundDropdownsAsync();
+        var hasPresetCategory = await dbContext.LostFoundCategoryPresets
+            .AsNoTracking()
+            .AnyAsync(category => category.IsActive && category.Name == item.Category);
+
+        await PopulateLostFoundDropdownsAsync(hasPresetCategory ? item.Category : null);
+
+        var selectedCategory = hasPresetCategory ? item.Category : OtherCategoryValue;
+        var customCategory = hasPresetCategory ? null : item.Category;
         return View(BuildItemFormViewModel(new LostFoundItemFormViewModel
         {
             Id = item.Id,
             Title = item.Title,
             Description = item.Description,
-            Category = item.Category,
+            Category = selectedCategory,
+            CustomCategory = customCategory,
             LocationDetails = item.LocationDetails,
             ListingType = item.ListingType,
             IncidentDateUtc = item.IncidentDateUtc,
@@ -155,8 +170,9 @@ public class LostFoundController(
             return NotFound();
         }
 
-        await PopulateLostFoundDropdownsAsync();
+        await PopulateLostFoundDropdownsAsync(viewModel.Category);
         NormalizeLocationDetails(viewModel);
+        NormalizeCategory(viewModel);
 
         if (!ModelState.IsValid)
         {
@@ -176,7 +192,7 @@ public class LostFoundController(
 
         item.Title = viewModel.Title;
         item.Description = viewModel.Description;
-        item.Category = viewModel.Category;
+        item.Category = ResolveCategory(viewModel);
         item.LocationDetails = viewModel.LocationDetails;
         item.ListingType = viewModel.ListingType;
         item.IncidentDateUtc = viewModel.IncidentDateUtc?.Date;
@@ -207,9 +223,39 @@ public class LostFoundController(
             return NotFound();
         }
 
+        var previousStatus = item.Status;
         item.Status = status;
         item.UpdatedAtUtc = DateTime.UtcNow;
+
+        if (previousStatus != LostFoundItemStatus.Resolved && status == LostFoundItemStatus.Resolved)
+        {
+            item.ResolvedAtUtc = DateTime.UtcNow;
+        }
+
         await dbContext.SaveChangesAsync();
+
+        var currentAdmin = await userManager.GetUserAsync(User);
+        if (currentAdmin is not null &&
+            !string.IsNullOrWhiteSpace(item.ReporterUserId) &&
+            item.ReporterUserId != currentAdmin.Id)
+        {
+            var title = status switch
+            {
+                LostFoundItemStatus.ClaimUnderReview => "Your lost & found item is under review",
+                LostFoundItemStatus.Resolved => "Your lost & found item was resolved",
+                _ => "Your lost & found item status was updated"
+            };
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = item.ReporterUserId,
+                ActorUserId = currentAdmin.Id,
+                Type = NotificationType.LostFoundStatusUpdated,
+                Title = title,
+                Body = item.Title.Length > 120 ? item.Title[..120] + "…" : item.Title,
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id })
+            });
+        }
 
         return RedirectToAction(nameof(Details), new { id });
     }
@@ -328,6 +374,30 @@ public class LostFoundController(
 
         await dbContext.SaveChangesAsync();
 
+        if (!string.IsNullOrWhiteSpace(item.ReporterUserId) && item.ReporterUserId != currentUser.Id)
+        {
+            var bodyParts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(claimForm.ClaimantName))
+            {
+                bodyParts.Add(claimForm.ClaimantName.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(claimForm.PreferredContactMethod))
+            {
+                bodyParts.Add($"Preferred contact: {claimForm.PreferredContactMethod.Trim()}");
+            }
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = item.ReporterUserId,
+                ActorUserId = currentUser.Id,
+                Type = NotificationType.LostFoundClaimSubmitted,
+                Title = "New claim on your lost & found item",
+                Body = bodyParts.Count == 0 ? item.Title : string.Join(" · ", bodyParts),
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id })
+            });
+        }
+
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -369,6 +439,74 @@ public class LostFoundController(
         locations.Insert(0, new SelectListItem("Select a location", ""));
         locations.Add(new SelectListItem("Other (type below)", OtherLocationValue));
         ViewBag.LocationOptions = locations;
+
+        var categories = await dbContext.LostFoundCategoryPresets
+            .AsNoTracking()
+            .Where(category => category.IsActive)
+            .OrderBy(category => category.DisplayOrder)
+            .ThenBy(category => category.Name)
+            .Select(category => new SelectListItem(category.Name, category.Name))
+            .ToListAsync();
+
+        categories.Insert(0, new SelectListItem("Select a category", ""));
+        categories.Add(new SelectListItem("Other (type below)", OtherCategoryValue));
+        ViewBag.CategoryOptions = categories;
+    }
+
+    private async Task PopulateLostFoundDropdownsAsync(string? currentCategorySelection)
+    {
+        await PopulateLostFoundDropdownsAsync();
+
+        if (string.IsNullOrWhiteSpace(currentCategorySelection))
+        {
+            return;
+        }
+
+        if (string.Equals(currentCategorySelection, OtherCategoryValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (ViewBag.CategoryOptions is not List<SelectListItem> options)
+        {
+            return;
+        }
+
+        var exists = options.Any(option => string.Equals(option.Value, currentCategorySelection, StringComparison.Ordinal));
+        if (!exists)
+        {
+            options.Insert(1, new SelectListItem($"Current: {currentCategorySelection}", currentCategorySelection));
+        }
+    }
+
+    private static string ResolveCategory(LostFoundItemFormViewModel viewModel)
+    {
+        if (string.Equals(viewModel.Category, OtherCategoryValue, StringComparison.Ordinal))
+        {
+            return viewModel.CustomCategory?.Trim() ?? string.Empty;
+        }
+
+        return viewModel.Category.Trim();
+    }
+
+    private void NormalizeCategory(LostFoundItemFormViewModel viewModel)
+    {
+        if (string.Equals(viewModel.Category, OtherCategoryValue, StringComparison.Ordinal))
+        {
+            if (string.IsNullOrWhiteSpace(viewModel.CustomCategory))
+            {
+                ModelState.AddModelError(nameof(viewModel.CustomCategory), "Please enter the category.");
+                return;
+            }
+
+            viewModel.CustomCategory = viewModel.CustomCategory.Trim();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(viewModel.Category))
+        {
+            ModelState.AddModelError(nameof(viewModel.Category), "Please select a category.");
+        }
     }
 
     private void NormalizeLocationDetails(LostFoundItemFormViewModel viewModel)

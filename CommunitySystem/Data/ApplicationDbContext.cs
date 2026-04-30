@@ -1,4 +1,6 @@
 using CommunitySystem.Models;
+using CommunitySystem.Models.Marketplace;
+using CommunitySystem.Models.Notifications;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +16,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<LostFoundItem> LostFoundItems => Set<LostFoundItem>();
     public DbSet<LostFoundClaim> LostFoundClaims => Set<LostFoundClaim>();
     public DbSet<LostFoundLocationPreset> LostFoundLocationPresets => Set<LostFoundLocationPreset>();
+    public DbSet<LostFoundCategoryPreset> LostFoundCategoryPresets => Set<LostFoundCategoryPreset>();
     public DbSet<ComplaintCase> ComplaintCases => Set<ComplaintCase>();
     public DbSet<ComplaintCaseImage> ComplaintCaseImages => Set<ComplaintCaseImage>();
     public DbSet<ComplaintLabel> ComplaintLabels => Set<ComplaintLabel>();
     public DbSet<ComplaintCaseLabel> ComplaintCaseLabels => Set<ComplaintCaseLabel>();
     public DbSet<ComplaintCaseUpdate> ComplaintCaseUpdates => Set<ComplaintCaseUpdate>();
+    public DbSet<MarketplaceItem> MarketplaceItems => Set<MarketplaceItem>();
+    public DbSet<MarketplaceItemImage> MarketplaceItemImages => Set<MarketplaceItemImage>();
+    public DbSet<MarketplaceChatThread> MarketplaceChatThreads => Set<MarketplaceChatThread>();
+    public DbSet<MarketplaceChatMessage> MarketplaceChatMessages => Set<MarketplaceChatMessage>();
+    public DbSet<MarketplaceItemSave> MarketplaceItemSaves => Set<MarketplaceItemSave>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -154,6 +163,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(item => item.ReporterUserId)
                 .HasMaxLength(450);
 
+            entity.Property(item => item.ResolvedAtUtc);
+
             entity.HasOne(item => item.ReporterUser)
                 .WithMany(user => user.LostFoundItems)
                 .HasForeignKey(item => item.ReporterUserId)
@@ -201,6 +212,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasMaxLength(160);
 
             entity.HasIndex(location => location.Name)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<LostFoundCategoryPreset>(entity =>
+        {
+            entity.Property(category => category.Name)
+                .HasMaxLength(80);
+
+            entity.HasIndex(category => category.Name)
                 .IsUnique();
         });
 
@@ -282,6 +302,151 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(update => update.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(update => update.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MarketplaceItem>(entity =>
+        {
+            entity.Property(item => item.Title)
+                .HasMaxLength(120);
+
+            entity.Property(item => item.Description)
+                .HasMaxLength(3000);
+
+            entity.Property(item => item.PaymentQrCodePath)
+                .HasMaxLength(260);
+
+            entity.Property(item => item.OwnerUserId)
+                .HasMaxLength(450);
+
+            entity.Property(item => item.Price)
+                .HasConversion<double>()
+                .HasColumnType("REAL");
+
+            entity.HasIndex(item => item.IsActive);
+
+            entity.HasOne(item => item.OwnerUser)
+                .WithMany(user => user.MarketplaceItems)
+                .HasForeignKey(item => item.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(item => item.Images)
+                .WithOne(image => image.MarketplaceItem)
+                .HasForeignKey(image => image.MarketplaceItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MarketplaceItemSave>(entity =>
+        {
+            entity.Property(save => save.UserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(save => new { save.MarketplaceItemId, save.UserId })
+                .IsUnique();
+
+            entity.HasIndex(save => save.UserId);
+
+            entity.HasOne(save => save.MarketplaceItem)
+                .WithMany()
+                .HasForeignKey(save => save.MarketplaceItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(save => save.User)
+                .WithMany(user => user.MarketplaceItemSaves)
+                .HasForeignKey(save => save.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MarketplaceItemImage>(entity =>
+        {
+            entity.Property(image => image.ImagePath)
+                .HasMaxLength(260);
+
+            entity.HasIndex(image => image.MarketplaceItemId);
+        });
+
+        modelBuilder.Entity<MarketplaceChatThread>(entity =>
+        {
+            entity.Property(thread => thread.OwnerUserId)
+                .HasMaxLength(450);
+
+            entity.Property(thread => thread.BuyerUserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(thread => thread.MarketplaceItemId);
+
+            entity.HasIndex(thread => new { thread.MarketplaceItemId, thread.OwnerUserId, thread.BuyerUserId })
+                .IsUnique();
+
+            entity.HasOne(thread => thread.OwnerUser)
+                .WithMany()
+                .HasForeignKey(thread => thread.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(thread => thread.BuyerUser)
+                .WithMany()
+                .HasForeignKey(thread => thread.BuyerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(thread => thread.MarketplaceItem)
+                .WithMany()
+                .HasForeignKey(thread => thread.MarketplaceItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(thread => thread.Messages)
+                .WithOne(message => message.MarketplaceChatThread)
+                .HasForeignKey(message => message.MarketplaceChatThreadId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MarketplaceChatMessage>(entity =>
+        {
+            entity.Property(message => message.SenderUserId)
+                .HasMaxLength(450);
+
+            entity.Property(message => message.Body)
+                .HasMaxLength(2000);
+
+            entity.Property(message => message.ImagePath)
+                .HasMaxLength(260);
+
+            entity.HasIndex(message => message.MarketplaceChatThreadId);
+            entity.HasIndex(message => message.CreatedAtUtc);
+
+            entity.HasOne(message => message.SenderUser)
+                .WithMany()
+                .HasForeignKey(message => message.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserNotification>(entity =>
+        {
+            entity.Property(notification => notification.RecipientUserId)
+                .HasMaxLength(450);
+
+            entity.Property(notification => notification.ActorUserId)
+                .HasMaxLength(450);
+
+            entity.Property(notification => notification.Title)
+                .HasMaxLength(180);
+
+            entity.Property(notification => notification.Body)
+                .HasMaxLength(600);
+
+            entity.Property(notification => notification.LinkUrl)
+                .HasMaxLength(260);
+
+            entity.HasIndex(notification => new { notification.RecipientUserId, notification.IsRead });
+            entity.HasIndex(notification => notification.CreatedAtUtc);
+
+            entity.HasOne(notification => notification.RecipientUser)
+                .WithMany(user => user.Notifications)
+                .HasForeignKey(notification => notification.RecipientUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(notification => notification.ActorUser)
+                .WithMany()
+                .HasForeignKey(notification => notification.ActorUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -25,7 +25,7 @@
             </div>
             <div class="col-md-6">
                 <label asp-for="Category" class="form-label"></label>
-                <input asp-for="Category" class="form-control" />
+                <select asp-for="Category" asp-items="ViewBag.CategoryOptions" class="form-select"></select>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
             <div class="col-12">
@@ -52,6 +52,11 @@
                 <label asp-for="CustomLocationDetails" class="form-label"></label>
                 <input asp-for="CustomLocationDetails" class="form-control" placeholder="Only fill this when you selected Other." />
                 <span asp-validation-for="CustomLocationDetails" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="CustomCategory" class="form-label"></label>
+                <input asp-for="CustomCategory" class="form-control" placeholder="Only fill this when you selected Other category." />
+                <span asp-validation-for="CustomCategory" class="text-danger"></span>
             </div>
             <div class="col-md-4">
                 <label asp-for="ContactName" class="form-label"></label>

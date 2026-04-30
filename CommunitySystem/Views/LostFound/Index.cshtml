@@ -106,9 +106,13 @@
                         <h2>@item.Title</h2>
                         <p class="lf-description">@item.Description</p>
                         <div class="lf-meta-grid">
-                            <span><strong>Category</strong> @item.Category</span>
+                            @* <span><strong>Category</strong> @item.Category</span> *@
                             @* <span><strong>Location</strong> @item.LocationDetails</span> *@
                             <span><strong>Reported</strong> @item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            @if (item.Status == LostFoundItemStatus.Resolved && item.ResolvedAtUtc.HasValue)
+                            {
+                                <span><strong>Resolved</strong> @item.ResolvedAtUtc.Value.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            }
                             @* <span><strong>Claims</strong> @item.Claims.Count</span> *@
                         </div>
                         <div class="lf-card-actions">

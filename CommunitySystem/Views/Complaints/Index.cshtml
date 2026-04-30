@@ -94,9 +94,12 @@ else
                         }
                     </td>
                     <td>
-                        <span class="badge @(item.Status == ComplaintCaseStatus.Completed ? "bg-success" : "bg-warning text-dark")">
-                            @item.Status
-                        </span>
+                        <div class="d-flex flex-column gap-2">
+                            <span class="badge @(item.Status == ComplaintCaseStatus.Completed ? "bg-success" : "bg-warning text-dark") align-self-start">
+                                @item.Status
+                            </span>
+                            <partial name="_ComplaintProgress" model="item.Status" />
+                        </div>
                     </td>
                     <td class="text-end text-secondary">@item.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd")</td>
                 </tr>

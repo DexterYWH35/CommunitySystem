@@ -1,6 +1,8 @@
 using CommunitySystem.Data;
 using CommunitySystem.Models;
+using CommunitySystem.Models.Notifications;
 using CommunitySystem.Security;
+using CommunitySystem.Services.Notifications;
 using CommunitySystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +13,10 @@ using Microsoft.EntityFrameworkCore;
 namespace CommunitySystem.Controllers;
 
 [Authorize(Roles = $"{RoleNames.Admin},{RoleNames.User}")]
-public class CommentsController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager) : Controller
+public class CommentsController(
+    ApplicationDbContext dbContext,
+    UserManager<ApplicationUser> userManager,
+    INotificationService notificationService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -252,6 +257,19 @@ public class CommentsController(ApplicationDbContext dbContext, UserManager<Appl
                 UserId = currentUser.Id,
                 CreatedAtUtc = DateTime.UtcNow
             });
+
+            if (!string.IsNullOrWhiteSpace(comment.OwnerUserId) && comment.OwnerUserId != currentUser.Id)
+            {
+                await notificationService.CreateAsync(new UserNotification
+                {
+                    RecipientUserId = comment.OwnerUserId,
+                    ActorUserId = currentUser.Id,
+                    Type = NotificationType.CommentLiked,
+                    Title = "Someone liked your comment",
+                    Body = comment.Body.Length > 100 ? comment.Body[..100] + "…" : comment.Body,
+                    LinkUrl = Url.Action("Details", "Posts", new { id = comment.PostId })
+                });
+            }
         }
         else
         {

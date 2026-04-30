@@ -1,4 +1,5 @@
 using CommunitySystem.Models;
+using CommunitySystem.Models.Marketplace;
 
 namespace CommunitySystem.ViewModels;
 
@@ -23,4 +24,6 @@ public class HomeIndexViewModel
     public int ComplaintOpenCount { get; init; }
     public int ComplaintCompletedCount { get; init; }
     public IReadOnlyCollection<ComplaintCase> RecentComplaints { get; init; } = Array.Empty<ComplaintCase>();
+
+    public IReadOnlyCollection<MarketplaceItem> LatestMarketplaceItems { get; init; } = Array.Empty<MarketplaceItem>();
 }

@@ -20,6 +20,10 @@ public class LostFoundItemFormViewModel
     [StringLength(80)]
     public string Category { get; set; } = string.Empty;
 
+    [StringLength(80)]
+    [Display(Name = "Other category")]
+    public string? CustomCategory { get; set; }
+
     [Required]
     [StringLength(160)]
     [Display(Name = "Location")]

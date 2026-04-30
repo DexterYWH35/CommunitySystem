@@ -11,10 +11,13 @@
             <span class="lf-kicker">@Model.Item.ListingType Case</span>
             <h1>@Model.Item.Title</h1>
             <p>Reported on @Model.Item.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm") and currently marked as @Model.Item.Status.</p>
+            @if (Model.Item.Status == LostFoundItemStatus.Resolved && Model.Item.ResolvedAtUtc.HasValue)
+            {
+                <p class="text-secondary mb-0">Resolved on @Model.Item.ResolvedAtUtc.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm").</p>
+            }
         </div>
         <div class="lf-banner-actions">
-            <a asp-action="Index" class="btn btn-outline-secondary"
-               onclick="if (window.history.length > 1) { window.history.back(); return false; }">
+            <a asp-action="Index" class="btn btn-outline-secondary">
                 <span class="lf-btn-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -98,6 +101,13 @@
                     <div>
                         <span class="lf-meta-label">Date related to item</span>
                         <strong>@Model.Item.IncidentDateUtc.Value.ToLocalTime().ToString("dd MMM yyyy")</strong>
+                    </div>
+                }
+                @if (Model.Item.Status == LostFoundItemStatus.Resolved && Model.Item.ResolvedAtUtc.HasValue)
+                {
+                    <div>
+                        <span class="lf-meta-label">Resolved on</span>
+                        <strong>@Model.Item.ResolvedAtUtc.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</strong>
                     </div>
                 }
             </div>

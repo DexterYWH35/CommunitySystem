@@ -1,0 +1,219 @@
+@model CommunitySystem.ViewModels.MarketplaceChatThreadViewModel
+
+@{
+    ViewData["Title"] = $"Chat · {Model.Item.Title}";
+    var lastMessageId = Model.Thread.Messages.LastOrDefault()?.Id ?? 0;
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Marketplace</span>
+        <h1 class="display-6 fw-semibold">Chat</h1>
+        <p class="text-secondary mb-0">
+            @Model.OtherUserDisplayName ·
+            <a asp-controller="Marketplace" asp-action="Details" asp-route-id="@Model.Item.Id" class="text-decoration-none">@Model.Item.Title</a>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">My Chats</a>
+    </div>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <div id="messages"
+         class="d-flex flex-column gap-2"
+         style="max-height: 52vh; overflow: auto; padding-right: 4px;">
+        @foreach (var message in Model.Thread.Messages)
+        {
+            var isMine = message.SenderUserId == Model.CurrentUserId;
+            <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start")">
+                <div class="p-2 rounded-3 @(isMine ? "bg-primary text-white" : "bg-light")" style="max-width: 80%;">
+                    <div class="small @(isMine ? "text-white-50" : "text-secondary")">
+                        @if (!isMine)
+                        {
+                            <span>@(message.SenderUser?.UserName ?? "User")</span>
+                            <span>·</span>
+                        }
+                        <span>@message.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(message.Body))
+                    {
+                        <div style="white-space: pre-wrap;">@message.Body</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(message.ImagePath))
+                    {
+                        <div class="mt-2">
+                            <img src="@message.ImagePath" alt="Chat image" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(0,0,0,.1);" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <form id="sendForm" asp-action="SendMessage" method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-start">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="threadId" value="@Model.Thread.Id" />
+        <div class="flex-grow-1 d-flex flex-column gap-2">
+            <div id="imagePreview" class="d-none">
+                <div class="d-inline-flex align-items-center gap-2 p-2 rounded-3 bg-light border" style="max-width: 100%;">
+                    <img id="imagePreviewImg" alt="Selected image preview" style="width: 56px; height: 56px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,.08);" />
+                    <div class="d-flex flex-column">
+                        <div class="small text-secondary">Image ready</div>
+                        <div id="imagePreviewName" class="small fw-semibold text-truncate" style="max-width: 220px;"></div>
+                    </div>
+                    <button type="button" id="removeImage" class="btn btn-sm btn-outline-secondary">Remove</button>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 align-items-start">
+                <button type="button" id="attachBtn" class="btn btn-outline-secondary" title="Attach image" aria-label="Attach image">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <input type="file" id="imageFileInput" name="imageFile" class="d-none" accept="image/*" />
+                <input type="text" name="body" class="form-control" placeholder="Type a message..." autocomplete="off" />
+                <button type="submit" class="btn btn-primary" style="min-width: 96px;">Send</button>
+            </div>
+            <div class="form-text">Tip: attach an image with the + button.</div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const threadId = @Model.Thread.Id;
+        let lastId = @lastMessageId;
+        const messagesEl = document.getElementById('messages');
+        const form = document.getElementById('sendForm');
+        const bodyInput = form.querySelector('input[name="body"]');
+        const imageInput = document.getElementById('imageFileInput');
+        const attachBtn = document.getElementById('attachBtn');
+        const previewWrap = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('imagePreviewImg');
+        const previewName = document.getElementById('imagePreviewName');
+        const removeImageBtn = document.getElementById('removeImage');
+        let previewObjectUrl = null;
+
+        function scrollToBottom() {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function clearPreview() {
+            if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+                previewObjectUrl = null;
+            }
+            previewWrap.classList.add('d-none');
+            previewImg.removeAttribute('src');
+            previewName.textContent = '';
+            if (imageInput) imageInput.value = '';
+        }
+
+        function showPreview(file) {
+            clearPreview();
+            if (!file) return;
+            previewObjectUrl = URL.createObjectURL(file);
+            previewImg.src = previewObjectUrl;
+            previewName.textContent = file.name || 'Selected image';
+            previewWrap.classList.remove('d-none');
+        }
+
+        function appendMessage(msg) {
+            const isMine = msg.senderUserId === '@Model.CurrentUserId';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'd-flex ' + (isMine ? 'justify-content-end' : 'justify-content-start');
+
+            const bubble = document.createElement('div');
+            bubble.className = 'p-2 rounded-3 ' + (isMine ? 'bg-primary text-white' : 'bg-light');
+            bubble.style.maxWidth = '80%';
+
+            const meta = document.createElement('div');
+            meta.className = 'small ' + (isMine ? 'text-white-50' : 'text-secondary');
+            const time = new Date(msg.createdAtUtc).toLocaleString();
+            meta.textContent = (isMine ? '' : (msg.senderName + ' · ')) + time;
+
+            bubble.appendChild(meta);
+
+            if (msg.body) {
+                const body = document.createElement('div');
+                body.style.whiteSpace = 'pre-wrap';
+                body.textContent = msg.body;
+                bubble.appendChild(body);
+            }
+
+            if (msg.imageUrl) {
+                const imgWrap = document.createElement('div');
+                imgWrap.className = 'mt-2';
+                const img = document.createElement('img');
+                img.src = msg.imageUrl;
+                img.alt = 'Chat image';
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '12px';
+                img.style.border = '1px solid rgba(0,0,0,.1)';
+                imgWrap.appendChild(img);
+                bubble.appendChild(imgWrap);
+            }
+
+            wrapper.appendChild(bubble);
+            messagesEl.appendChild(wrapper);
+        }
+
+        async function poll() {
+            try {
+                const resp = await fetch(`@Url.Action("Messages")?threadId=${threadId}&afterId=${lastId}`, { headers: { 'Accept': 'application/json' }});
+                if (!resp.ok) return;
+                const msgs = await resp.json();
+                if (!Array.isArray(msgs) || msgs.length === 0) return;
+                for (const msg of msgs) {
+                    appendMessage(msg);
+                    lastId = Math.max(lastId, msg.id);
+                }
+                scrollToBottom();
+            } catch (e) { }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = (bodyInput.value || '').trim();
+            const hasImage = imageInput && imageInput.files && imageInput.files.length > 0;
+            if (!text && !hasImage) return;
+
+            try {
+                const data = new FormData(form);
+                data.set('threadId', threadId);
+                if (text) data.set('body', text);
+
+                const resp = await fetch(form.getAttribute('action'), {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: data
+                });
+                if (!resp.ok) return;
+                bodyInput.value = '';
+                clearPreview();
+                await poll();
+            } catch (e) { }
+        });
+
+        if (attachBtn && imageInput) {
+            attachBtn.addEventListener('click', () => imageInput.click());
+            imageInput.addEventListener('change', () => {
+                const file = imageInput.files && imageInput.files.length > 0 ? imageInput.files[0] : null;
+                showPreview(file);
+            });
+        }
+
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', () => clearPreview());
+        }
+
+        scrollToBottom();
+        setInterval(poll, 3000);
+    })();
+</script>
+}

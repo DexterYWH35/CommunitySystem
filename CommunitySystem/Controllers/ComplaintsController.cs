@@ -1,6 +1,8 @@
 using CommunitySystem.Data;
 using CommunitySystem.Models;
+using CommunitySystem.Models.Notifications;
 using CommunitySystem.Security;
+using CommunitySystem.Services.Notifications;
 using CommunitySystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +17,8 @@ namespace CommunitySystem.Controllers;
 public class ComplaintsController(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IWebHostEnvironment webHostEnvironment) : Controller
+    IWebHostEnvironment webHostEnvironment,
+    INotificationService notificationService) : Controller
 {
     private const string OtherLocationValue = "__OTHER__";
     private const int MaxImageUploads = 5;
@@ -237,6 +240,31 @@ public class ComplaintsController(
 
         await UpdateCaseLabelsAsync(complaintCase, viewModel.SelectedLabelIds, viewModel.NewLabels);
         await dbContext.SaveChangesAsync();
+
+        if (!string.IsNullOrWhiteSpace(complaintCase.ReporterUserId) && complaintCase.ReporterUserId != currentAdmin.Id)
+        {
+            var notificationTitle = viewModel.Status switch
+            {
+                ComplaintCaseStatus.Reviewing => "Your complaint is being reviewed",
+                ComplaintCaseStatus.Completed => "Your complaint has been closed",
+                _ => "Your complaint was updated"
+            };
+
+            var notificationBody = !string.IsNullOrWhiteSpace(remarks)
+                ? remarks
+                : $"Status: {viewModel.Status}";
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = complaintCase.ReporterUserId,
+                ActorUserId = currentAdmin.Id,
+                Type = NotificationType.ComplaintUpdated,
+                Title = notificationTitle,
+                Body = notificationBody,
+                LinkUrl = Url.Action("Details", "Complaints", new { id = complaintCase.Id })
+            });
+        }
+
         await transaction.CommitAsync();
 
         return RedirectToAction(nameof(Details), new { id = complaintCase.Id });

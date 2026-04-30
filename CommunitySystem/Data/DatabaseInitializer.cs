@@ -230,6 +230,11 @@ public static class DatabaseInitializer
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundItems" ADD COLUMN "ContactPhone" TEXT NULL;""");
         }
 
+        if (!await ColumnExistsAsync(dbContext, "LostFoundItems", "ResolvedAtUtc"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundItems" ADD COLUMN "ResolvedAtUtc" TEXT NULL;""");
+        }
+
         if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "PreferredContactMethod"))
         {
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "PreferredContactMethod" TEXT NULL;""");
@@ -257,6 +262,30 @@ public static class DatabaseInitializer
         if (!await ColumnExistsAsync(dbContext, "LostFoundLocationPresets", "DisplayOrder"))
         {
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundLocationPresets" ADD COLUMN "DisplayOrder" INTEGER NOT NULL DEFAULT 0;""");
+        }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "LostFoundCategoryPresets" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_LostFoundCategoryPresets" PRIMARY KEY AUTOINCREMENT,
+                "Name" TEXT NOT NULL,
+                "IsActive" INTEGER NOT NULL DEFAULT 1,
+                "DisplayOrder" INTEGER NOT NULL DEFAULT 0,
+                "CreatedAtUtc" TEXT NOT NULL
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_LostFoundCategoryPresets_Name" ON "LostFoundCategoryPresets" ("Name");
+            """
+        );
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundCategoryPresets", "IsActive"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundCategoryPresets" ADD COLUMN "IsActive" INTEGER NOT NULL DEFAULT 1;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundCategoryPresets", "DisplayOrder"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundCategoryPresets" ADD COLUMN "DisplayOrder" INTEGER NOT NULL DEFAULT 0;""");
         }
 
         await dbContext.Database.ExecuteSqlRawAsync(
@@ -323,6 +352,108 @@ public static class DatabaseInitializer
 
             CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseUpdates_ComplaintCaseId" ON "ComplaintCaseUpdates" ("ComplaintCaseId");
             CREATE INDEX IF NOT EXISTS "IX_ComplaintCaseUpdates_UpdatedByUserId" ON "ComplaintCaseUpdates" ("UpdatedByUserId");
+            """
+        );
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "MarketplaceItems" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_MarketplaceItems" PRIMARY KEY AUTOINCREMENT,
+                "Title" TEXT NOT NULL,
+                "Description" TEXT NOT NULL,
+                "ListingType" INTEGER NOT NULL,
+                "Price" REAL NOT NULL,
+                "PaymentQrCodePath" TEXT NULL,
+                "IsActive" INTEGER NOT NULL DEFAULT 1,
+                "OwnerUserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NULL,
+                CONSTRAINT "FK_MarketplaceItems_AspNetUsers_OwnerUserId" FOREIGN KEY ("OwnerUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE TABLE IF NOT EXISTS "MarketplaceItemImages" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_MarketplaceItemImages" PRIMARY KEY AUTOINCREMENT,
+                "MarketplaceItemId" INTEGER NOT NULL,
+                "ImagePath" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_MarketplaceItemImages_MarketplaceItems_MarketplaceItemId" FOREIGN KEY ("MarketplaceItemId") REFERENCES "MarketplaceItems" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceItems_OwnerUserId" ON "MarketplaceItems" ("OwnerUserId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceItems_IsActive" ON "MarketplaceItems" ("IsActive");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceItemImages_MarketplaceItemId" ON "MarketplaceItemImages" ("MarketplaceItemId");
+
+            CREATE TABLE IF NOT EXISTS "MarketplaceItemSaves" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_MarketplaceItemSaves" PRIMARY KEY AUTOINCREMENT,
+                "MarketplaceItemId" INTEGER NOT NULL,
+                "UserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_MarketplaceItemSaves_MarketplaceItems_MarketplaceItemId" FOREIGN KEY ("MarketplaceItemId") REFERENCES "MarketplaceItems" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_MarketplaceItemSaves_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_MarketplaceItemSaves_Item_User"
+                ON "MarketplaceItemSaves" ("MarketplaceItemId", "UserId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceItemSaves_UserId" ON "MarketplaceItemSaves" ("UserId");
+
+            CREATE TABLE IF NOT EXISTS "MarketplaceChatThreads" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_MarketplaceChatThreads" PRIMARY KEY AUTOINCREMENT,
+                "MarketplaceItemId" INTEGER NOT NULL,
+                "OwnerUserId" TEXT NOT NULL,
+                "BuyerUserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "LastMessageAtUtc" TEXT NULL,
+                CONSTRAINT "FK_MarketplaceChatThreads_MarketplaceItems_MarketplaceItemId" FOREIGN KEY ("MarketplaceItemId") REFERENCES "MarketplaceItems" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_MarketplaceChatThreads_AspNetUsers_OwnerUserId" FOREIGN KEY ("OwnerUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT,
+                CONSTRAINT "FK_MarketplaceChatThreads_AspNetUsers_BuyerUserId" FOREIGN KEY ("BuyerUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_MarketplaceChatThreads_Item_Owner_Buyer"
+                ON "MarketplaceChatThreads" ("MarketplaceItemId", "OwnerUserId", "BuyerUserId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceChatThreads_MarketplaceItemId" ON "MarketplaceChatThreads" ("MarketplaceItemId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceChatThreads_OwnerUserId" ON "MarketplaceChatThreads" ("OwnerUserId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceChatThreads_BuyerUserId" ON "MarketplaceChatThreads" ("BuyerUserId");
+
+            CREATE TABLE IF NOT EXISTS "MarketplaceChatMessages" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_MarketplaceChatMessages" PRIMARY KEY AUTOINCREMENT,
+                "MarketplaceChatThreadId" INTEGER NOT NULL,
+                "SenderUserId" TEXT NOT NULL,
+                "Body" TEXT NOT NULL,
+                "ImagePath" TEXT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_MarketplaceChatMessages_MarketplaceChatThreads_MarketplaceChatThreadId" FOREIGN KEY ("MarketplaceChatThreadId") REFERENCES "MarketplaceChatThreads" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_MarketplaceChatMessages_AspNetUsers_SenderUserId" FOREIGN KEY ("SenderUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceChatMessages_MarketplaceChatThreadId" ON "MarketplaceChatMessages" ("MarketplaceChatThreadId");
+            CREATE INDEX IF NOT EXISTS "IX_MarketplaceChatMessages_CreatedAtUtc" ON "MarketplaceChatMessages" ("CreatedAtUtc");
+            """
+        );
+
+        if (!await ColumnExistsAsync(dbContext, "MarketplaceChatMessages", "ImagePath"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "MarketplaceChatMessages" ADD COLUMN "ImagePath" TEXT NULL;""");
+        }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "UserNotifications" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_UserNotifications" PRIMARY KEY AUTOINCREMENT,
+                "RecipientUserId" TEXT NOT NULL,
+                "ActorUserId" TEXT NULL,
+                "Type" INTEGER NOT NULL,
+                "Title" TEXT NOT NULL,
+                "Body" TEXT NULL,
+                "LinkUrl" TEXT NULL,
+                "IsRead" INTEGER NOT NULL DEFAULT 0,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "ReadAtUtc" TEXT NULL,
+                CONSTRAINT "FK_UserNotifications_AspNetUsers_RecipientUserId" FOREIGN KEY ("RecipientUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_UserNotifications_AspNetUsers_ActorUserId" FOREIGN KEY ("ActorUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_UserNotifications_Recipient_IsRead" ON "UserNotifications" ("RecipientUserId", "IsRead");
+            CREATE INDEX IF NOT EXISTS "IX_UserNotifications_CreatedAtUtc" ON "UserNotifications" ("CreatedAtUtc");
             """
         );
     }

@@ -1,0 +1,110 @@
+@model CommunitySystem.ViewModels.MarketplaceItemDetailsViewModel
+
+@{
+    ViewData["Title"] = "Marketplace Item";
+    var item = Model.Item;
+    var images = item.Images.ToList();
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Marketplace</span>
+        <h1 class="display-6 fw-semibold">Item details</h1>
+        <p class="text-secondary mb-0">View photos, price and payment info, and chat with the owner.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+        @if (Model.CanManage)
+        {
+            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary">Edit</a>
+            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger">Delete</a>
+        }
+        <a asp-controller="MarketplaceChat" asp-action="Index" class="btn btn-outline-primary">My Chats</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="table-card p-3 p-lg-4">
+            @if (!images.Any())
+            {
+                <div class="alert alert-info mb-0">No images uploaded.</div>
+            }
+            else
+            {
+                <div id="marketplaceCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner rounded-4 overflow-hidden">
+                        @for (var i = 0; i < images.Count; i++)
+                        {
+                            var img = images[i];
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@img.ImagePath" class="d-block w-100" alt="@item.Title" style="aspect-ratio: 16/10; object-fit: cover;" />
+                            </div>
+                        }
+                    </div>
+                    @if (images.Count > 1)
+                    {
+                        <button class="carousel-control-prev" type="button" data-bs-target="#marketplaceCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#marketplaceCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <div class="table-card p-3 p-lg-4 d-flex flex-column gap-3">
+            <div>
+                <div class="d-flex flex-column gap-1">
+                    <div class="fw-semibold fs-4">@item.Title</div>
+                    <div class="text-secondary">@(item.OwnerUser?.UserName ?? "User")</div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge text-bg-light rounded-pill">@item.ListingType</span>
+                        <span class="fw-semibold">RM @item.Price.ToString("0.00")</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="text-secondary small mb-1">Description</div>
+                <div style="white-space: pre-wrap;">@item.Description</div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(item.PaymentQrCodePath))
+            {
+                <div>
+                    <div class="text-secondary small mb-2">Payment QR code</div>
+                    <img src="@item.PaymentQrCodePath" alt="Payment QR code" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(0,0,0,.1);" />
+                    <div class="form-text">Pay directly using your e-wallet app, then confirm with the owner in chat.</div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light mb-0">Owner has not provided a payment QR code.</div>
+            }
+
+            @if (!Model.CanManage)
+            {
+                <div class="d-grid gap-2">
+                    @if (Model.ExistingChatThreadId is not null)
+                    {
+                        <a asp-controller="MarketplaceChat" asp-action="Thread" asp-route-id="@Model.ExistingChatThreadId" class="btn btn-primary">Open chat</a>
+                    }
+                    else
+                    {
+                        <form asp-controller="MarketplaceChat" asp-action="Start" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary">Chat with owner</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

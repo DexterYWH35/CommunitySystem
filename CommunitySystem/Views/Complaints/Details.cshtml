@@ -35,6 +35,8 @@
                     }
                 </div>
 
+                <partial name="_ComplaintProgress" model="Model.Status" />
+
                 <h2 class="h5">Description</h2>
                 <p class="mb-0" style="white-space: pre-wrap;">@Model.Description</p>
             </div>
@@ -87,41 +89,41 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Remarks (admin only)</label>
-                            <textarea name="Remarks" class="form-control" rows="4" placeholder="Optional internal notes..."></textarea>
+                            <label class="form-label">Remarks (shown to resident)</label>
+                            <textarea name="Remarks" class="form-control" rows="4" placeholder="Add a note visible to the complaint owner..."></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">Update Case</button>
                     </form>
                 </div>
             </div>
+        }
 
-            @if (Model.Updates.Count > 0)
-            {
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h2 class="h5 mb-3">Update History</h2>
-                        <div class="d-flex flex-column gap-3">
-                            @foreach (var update in Model.Updates)
-                            {
-                                <div class="border rounded p-3">
-                                    <div class="d-flex justify-content-between gap-2">
-                                        <div class="fw-semibold">@update.Status</div>
-                                        <div class="text-secondary small">@update.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
-                                    </div>
-                                    @if (!string.IsNullOrWhiteSpace(update.Remarks))
-                                    {
-                                        <div class="mt-2" style="white-space: pre-wrap;">@update.Remarks</div>
-                                    }
-                                    <div class="text-secondary small mt-2">
-                                        Updated by: @(update.UpdatedByUser?.Email ?? update.UpdatedByUserId)
-                                    </div>
+        @if (Model.Updates.Count > 0)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Admin remarks &amp; updates</h2>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var update in Model.Updates)
+                        {
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between gap-2">
+                                    <div class="fw-semibold">@update.Status</div>
+                                    <div class="text-secondary small">@update.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
                                 </div>
-                            }
-                        </div>
+                                @if (!string.IsNullOrWhiteSpace(update.Remarks))
+                                {
+                                    <div class="mt-2" style="white-space: pre-wrap;">@update.Remarks</div>
+                                }
+                                <div class="text-secondary small mt-2">
+                                    Updated by: @(update.UpdatedByUser?.UserName ?? update.UpdatedByUser?.Email ?? "Admin")
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
-            }
+            </div>
         }
 
         @if (isAdmin && Model.ReporterUser is not null)

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunitySystem.Data;
 using Microsoft.AspNetCore.Mvc;
 using CommunitySystem.Models;
+using CommunitySystem.Models.Marketplace;
 using CommunitySystem.Security;
 using CommunitySystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -53,6 +54,17 @@ public class HomeController : Controller
             .ThenByDescending(post => post.CreatedAtUtc)
             .Take(3)
             .ToListAsync();
+
+        var latestMarketplaceItems = User.Identity?.IsAuthenticated == true
+            ? await _dbContext.MarketplaceItems
+                .AsNoTracking()
+                .Where(item => item.IsActive)
+                .Include(item => item.Images.OrderBy(image => image.Id))
+                .Include(item => item.OwnerUser)
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(6)
+                .ToListAsync()
+            : new List<MarketplaceItem>();
 
         var lostFoundOpenCount = 0;
         var lostFoundUnderReviewCount = 0;
@@ -110,7 +122,8 @@ public class HomeController : Controller
             RecentLostFoundItems = recentLostFoundItems,
             ComplaintOpenCount = complaintOpenCount,
             ComplaintCompletedCount = complaintCompletedCount,
-            RecentComplaints = recentComplaints
+            RecentComplaints = recentComplaints,
+            LatestMarketplaceItems = latestMarketplaceItems
         };
 
         return View(viewModel);

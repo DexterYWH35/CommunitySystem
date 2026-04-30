@@ -1,0 +1,120 @@
+@model CommunitySystem.ViewModels.MarketplaceItemFormViewModel
+@using CommunitySystem.Models.Marketplace
+
+@{
+    ViewData["Title"] = "Edit Listing";
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Marketplace</span>
+        <h1 class="display-6 fw-semibold">Edit listing</h1>
+        <p class="text-secondary mb-0">Update details, add/remove images, or replace your payment QR code.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-primary">View</a>
+        <a asp-action="MyListings" class="btn btn-outline-secondary">My Listings</a>
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Delete</a>
+    </div>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="row g-3">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="col-12">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="6"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="ListingType" class="form-label"></label>
+            <select asp-for="ListingType" class="form-select" asp-items="Html.GetEnumSelectList<MarketplaceListingType>()"></select>
+            <span asp-validation-for="ListingType" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="Price" class="form-label"></label>
+            <input asp-for="Price" class="form-control" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="form-check mt-4">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="ImageFiles" class="form-label"></label>
+            <input asp-for="ImageFiles" type="file" class="form-control" accept="image/*" multiple />
+            <span asp-validation-for="ImageFiles" class="text-danger"></span>
+            <div class="form-text">Upload more images (up to 6 per upload).</div>
+        </div>
+
+        @if (Model.ExistingImages.Any())
+        {
+            <div class="col-12">
+                <div class="fw-semibold mb-2">Existing images</div>
+                <div class="row g-2">
+                    @foreach (var image in Model.ExistingImages)
+                    {
+                        <div class="col-6 col-md-4 col-xl-3">
+                            <div class="card">
+                                <img src="@image.Path" class="card-img-top" style="aspect-ratio: 1/1; object-fit: cover;" alt="Item image" />
+                                <div class="card-body p-2">
+                                    <div class="d-grid">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                formnovalidate
+                                                formmethod="post"
+                                                formaction="@Url.Action("DeleteImage", "Marketplace", new { id = Model.Id, imageId = image.Id })">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="col-12">
+            <label asp-for="PaymentQrCodeFile" class="form-label"></label>
+            <input asp-for="PaymentQrCodeFile" type="file" class="form-control" accept="image/*" />
+            <span asp-validation-for="PaymentQrCodeFile" class="text-danger"></span>
+            @if (!string.IsNullOrWhiteSpace(Model.ExistingPaymentQrCodePath))
+            {
+                <div class="mt-2 d-flex flex-column flex-md-row gap-3 align-items-md-start">
+                    <img src="@Model.ExistingPaymentQrCodePath" alt="Payment QR code" style="max-width: 260px; border-radius: 12px; border: 1px solid rgba(0,0,0,.1);" />
+                    <button type="submit"
+                            class="btn btn-outline-danger"
+                            formnovalidate
+                            formmethod="post"
+                            formaction="@Url.Action("ClearPaymentQrCode", "Marketplace", new { id = Model.Id })">
+                        Remove QR code
+                    </button>
+                </div>
+            }
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

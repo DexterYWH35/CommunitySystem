@@ -62,6 +62,7 @@ public static class SeedData
             await SeedNoticesAsync(dbContext);
             await SeedLostFoundAsync(dbContext, adminUser, standardUser);
             await SeedLostFoundLocationsAsync(dbContext);
+            await SeedLostFoundCategoriesAsync(dbContext);
             await SeedComplaintLabelsAsync(dbContext);
             return;
         }
@@ -130,6 +131,7 @@ public static class SeedData
         await SeedNoticesAsync(dbContext);
         await SeedLostFoundAsync(dbContext, adminUser, standardUser);
         await SeedLostFoundLocationsAsync(dbContext);
+        await SeedLostFoundCategoriesAsync(dbContext);
         await SeedComplaintLabelsAsync(dbContext);
     }
 
@@ -304,6 +306,28 @@ public static class SeedData
             new LostFoundLocationPreset { Name = "Gym level", DisplayOrder = 30 },
             new LostFoundLocationPreset { Name = "Management office", DisplayOrder = 40 },
             new LostFoundLocationPreset { Name = "Parking level", DisplayOrder = 50 });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedLostFoundCategoriesAsync(ApplicationDbContext dbContext)
+    {
+        if (await dbContext.LostFoundCategoryPresets.AnyAsync())
+        {
+            return;
+        }
+
+        dbContext.LostFoundCategoryPresets.AddRange(
+            new LostFoundCategoryPreset { Name = "Keys", DisplayOrder = 10 },
+            new LostFoundCategoryPreset { Name = "Wallet / Purse", DisplayOrder = 20 },
+            new LostFoundCategoryPreset { Name = "Card (Access / ID / Bank)", DisplayOrder = 30 },
+            new LostFoundCategoryPreset { Name = "Phone / Tablet", DisplayOrder = 40 },
+            new LostFoundCategoryPreset { Name = "Bottle", DisplayOrder = 50 },
+            new LostFoundCategoryPreset { Name = "Bag", DisplayOrder = 60 },
+            new LostFoundCategoryPreset { Name = "Clothing", DisplayOrder = 70 },
+            new LostFoundCategoryPreset { Name = "Jewelry", DisplayOrder = 80 },
+            new LostFoundCategoryPreset { Name = "Documents", DisplayOrder = 90 },
+            new LostFoundCategoryPreset { Name = "Others", DisplayOrder = 100 });
 
         await dbContext.SaveChangesAsync();
     }

@@ -29,15 +29,26 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Posts" asp-action="Index">Posts</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Services
+                                </a>
+                                <ul class="dropdown-menu services-dropdown">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="LostFound" asp-action="Index">Lost &amp; Found</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Complaints" asp-action="Index">Complaints</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Marketplace" asp-action="Index">Marketplace</a></li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Notices" asp-action="Index">Notices</a></li>
+                                    }
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Complaints" asp-action="Index">Complaints</a>
-                            </li>
-                           
                         }
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -45,14 +56,18 @@
                                 <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                             </li>
                         }
-                        @if (User.IsInRole("Admin"))
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Notices" asp-action="Index">Notices</a>
+                                <a class="nav-link position-relative" asp-controller="MarketplaceChat" asp-action="Index" title="Chats">
+                                    <span class="visually-hidden">Chats</span>
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                                        <path d="M21 12a8 8 0 0 1-8 8H6l-3 3v-7a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                        <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </a>
                             </li>
-                            @* <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="LostFoundLocations" asp-action="Index">LF Locations</a>
-                            </li> *@
+                            @await Component.InvokeAsync("NotificationBell")
                         }
                         <partial name="_LoginPartial" />
                     </ul>

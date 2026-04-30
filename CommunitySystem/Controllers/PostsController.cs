@@ -1,6 +1,8 @@
 using CommunitySystem.Data;
 using CommunitySystem.Models;
+using CommunitySystem.Models.Notifications;
 using CommunitySystem.Security;
+using CommunitySystem.Services.Notifications;
 using CommunitySystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +15,8 @@ namespace CommunitySystem.Controllers;
 public class PostsController(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
-    IWebHostEnvironment webHostEnvironment) : Controller
+    IWebHostEnvironment webHostEnvironment,
+    INotificationService notificationService) : Controller
 {
     public async Task<IActionResult> Index(string? q = null)
     {
@@ -249,6 +252,19 @@ public class PostsController(
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
+        if (!string.IsNullOrWhiteSpace(post.OwnerUserId) && post.OwnerUserId != currentUser.Id)
+        {
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = post.OwnerUserId,
+                ActorUserId = currentUser.Id,
+                Type = NotificationType.PostCommented,
+                Title = "New comment on your post",
+                Body = comment.Body.Length > 120 ? comment.Body[..120] + "…" : comment.Body,
+                LinkUrl = Url.Action("Details", "Posts", new { id = post.Id })
+            });
+        }
+
         if (IsAjaxRequest(Request))
         {
             var refreshedViewModel = await BuildPostDetailsViewModelAsync(id);
@@ -285,6 +301,19 @@ public class PostsController(
                 UserId = currentUser.Id,
                 CreatedAtUtc = DateTime.UtcNow
             });
+
+            if (!string.IsNullOrWhiteSpace(post.OwnerUserId) && post.OwnerUserId != currentUser.Id)
+            {
+                await notificationService.CreateAsync(new UserNotification
+                {
+                    RecipientUserId = post.OwnerUserId,
+                    ActorUserId = currentUser.Id,
+                    Type = NotificationType.PostLiked,
+                    Title = "Someone liked your post",
+                    Body = post.Title.Length > 80 ? post.Title[..80] + "…" : post.Title,
+                    LinkUrl = Url.Action("Details", "Posts", new { id = post.Id })
+                });
+            }
         }
         else
         {

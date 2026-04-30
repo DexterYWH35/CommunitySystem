@@ -1,0 +1,24 @@
+@model CommunitySystem.Models.ComplaintCaseStatus
+
+@{
+    var currentStep = (int)Model;
+    var steps = new[]
+    {
+        new { Step = 1, Label = "Review" },
+        new { Step = 2, Label = "Process" },
+        new { Step = 3, Label = "Closed" }
+    };
+}
+
+<div class="case-progress" role="list" aria-label="Case progress">
+    @foreach (var step in steps)
+    {
+        var isDone = currentStep >= step.Step;
+        var isActive = currentStep == step.Step;
+        <div class="case-step @(isDone ? "is-done" : "") @(isActive ? "is-active" : "")" role="listitem">
+            <span class="case-dot" aria-hidden="true"></span>
+            <span class="case-label">@step.Label</span>
+        </div>
+    }
+</div>
+

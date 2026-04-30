@@ -1,0 +1,66 @@
+@model IEnumerable<CommunitySystem.Models.Notifications.UserNotification>
+
+@{
+    ViewData["Title"] = "Notifications";
+    var unreadOnly = (bool)(ViewBag.UnreadOnly ?? false);
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Account</span>
+        <h1 class="display-6 fw-semibold">Notifications</h1>
+        <p class="text-secondary mb-0">Updates about your posts, complaints, and marketplace activity.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" asp-route-unreadOnly="true" class="btn @(unreadOnly ? "btn-primary" : "btn-outline-secondary")">Unread</a>
+        <a asp-action="Index" asp-route-unreadOnly="false" class="btn @(!unreadOnly ? "btn-primary" : "btn-outline-secondary")">All</a>
+        <form asp-action="MarkAllRead" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-secondary">Mark all read</button>
+        </form>
+    </div>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">No notifications.</div>
+    }
+    else
+    {
+        <div class="list-group list-group-flush">
+            @foreach (var notification in Model)
+            {
+                var actorName = notification.ActorUser?.UserName ?? notification.ActorUser?.Email;
+                <a asp-action="Go"
+                   asp-route-id="@notification.Id"
+                   class="list-group-item list-group-item-action d-flex gap-3 align-items-start @(notification.IsRead ? "" : "bg-light")">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div class="fw-semibold">
+                                @notification.Title
+                                @if (!notification.IsRead)
+                                {
+                                    <span class="badge text-bg-primary rounded-pill ms-2">New</span>
+                                }
+                            </div>
+                            <div class="text-secondary small">@notification.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(actorName))
+                        {
+                            <div class="text-secondary small">From: @actorName</div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(notification.Body))
+                        {
+                            <div class="mt-1">@notification.Body</div>
+                        }
+                    </div>
+                    <div class="text-secondary small">Open</div>
+                </a>
+            }
+        </div>
+    }
+</div>
+

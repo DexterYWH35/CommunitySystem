@@ -54,6 +54,7 @@ public class LostFoundItem
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAtUtc { get; set; }
+    public DateTime? ResolvedAtUtc { get; set; }
 
     public ICollection<LostFoundClaim> Claims { get; set; } = new List<LostFoundClaim>();
 
