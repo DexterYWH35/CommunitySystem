@@ -1,0 +1,57 @@
+@model CommunitySystem.Models.SupportChat.SupportChatThread
+
+@{
+    ViewData["Title"] = "Support Chat";
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Support</span>
+        <h1 class="display-6 fw-semibold">Chat</h1>
+        <p class="text-secondary mb-0">Conversation with admin.</p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (!string.IsNullOrWhiteSpace(returnUrl))
+        {
+            <a href="@returnUrl" class="btn btn-outline-secondary">Back</a>
+        }
+        else
+        {
+            <a asp-controller="Chats" asp-action="Index" class="btn btn-outline-secondary">All Chats</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Support</a>
+        }
+    </div>
+</div>
+
+<div class="table-card p-3 p-lg-4">
+    <div class="d-flex flex-column gap-2" style="max-height: 52vh; overflow: auto; padding-right: 4px;">
+        @foreach (var message in Model.Messages)
+        {
+            var isMine = message.SenderUserId == currentUserId;
+            <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start")">
+                <div class="p-2 rounded-3 @(isMine ? "bg-primary text-white" : "bg-light")" style="max-width: 80%;">
+                    <div class="small @(isMine ? "text-white-50" : "text-secondary")">
+                        @if (!isMine)
+                        {
+                            <span>@(message.SenderUser?.UserName ?? "User")</span>
+                            <span>·</span>
+                        }
+                        <span>@message.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                    </div>
+                    <div style="white-space: pre-wrap;">@message.Body</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <form asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-start">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="threadId" value="@Model.Id" />
+        <input type="text" name="body" class="form-control" placeholder="Type a message..." autocomplete="off" />
+        <button type="submit" class="btn btn-primary" style="min-width: 96px;">Send</button>
+    </form>
+</div>

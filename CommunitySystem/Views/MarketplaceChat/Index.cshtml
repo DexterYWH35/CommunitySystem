@@ -1,17 +1,18 @@
 @model IEnumerable<CommunitySystem.Models.Marketplace.MarketplaceChatThread>
 
 @{
-    ViewData["Title"] = "My Chats";
+    ViewData["Title"] = "Marketplace Chats";
     var currentUserId = ViewBag.CurrentUserId as string;
 }
 
 <div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
     <div>
         <span class="eyebrow">Marketplace</span>
-        <h1 class="display-6 fw-semibold">My chats</h1>
+        <h1 class="display-6 fw-semibold">Marketplace chats</h1>
         <p class="text-secondary mb-0">Conversations about marketplace items.</p>
     </div>
     <div class="d-flex gap-2">
+        <a asp-controller="Chats" asp-action="Index" class="btn btn-outline-secondary">All Chats</a>
         <a asp-controller="Marketplace" asp-action="Index" class="btn btn-outline-secondary">Marketplace</a>
     </div>
 </div>
@@ -55,4 +56,3 @@
         </div>
     }
 </div>
-

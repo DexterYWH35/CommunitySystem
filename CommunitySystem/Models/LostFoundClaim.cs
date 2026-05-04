@@ -38,5 +38,16 @@ public class LostFoundClaim
     [Display(Name = "Preferred contact method")]
     public string? PreferredContactMethod { get; set; }
 
+    public LostFoundClaimStatus Status { get; set; } = LostFoundClaimStatus.Submitted;
+
+    public DateTime? ReviewedAtUtc { get; set; }
+
+    public string? ReviewedByUserId { get; set; }
+
+    public ApplicationUser? ReviewedByUser { get; set; }
+
+    [StringLength(600)]
+    public string? AdminRemarks { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

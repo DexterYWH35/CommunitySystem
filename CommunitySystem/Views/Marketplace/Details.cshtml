@@ -88,7 +88,7 @@
                 <div class="alert alert-light mb-0">Owner has not provided a payment QR code.</div>
             }
 
-            @if (!Model.CanManage)
+            @if (Model.CanChat)
             {
                 <div class="d-grid gap-2">
                     @if (Model.ExistingChatThreadId is not null)

@@ -240,6 +240,26 @@ public static class DatabaseInitializer
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "PreferredContactMethod" TEXT NULL;""");
         }
 
+        if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "Status"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "Status" INTEGER NOT NULL DEFAULT 1;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "ReviewedAtUtc"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "ReviewedAtUtc" TEXT NULL;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "ReviewedByUserId"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "ReviewedByUserId" TEXT NULL;""");
+        }
+
+        if (!await ColumnExistsAsync(dbContext, "LostFoundClaims", "AdminRemarks"))
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "LostFoundClaims" ADD COLUMN "AdminRemarks" TEXT NULL;""");
+        }
+
         await dbContext.Database.ExecuteSqlRawAsync(
             """
             CREATE TABLE IF NOT EXISTS "LostFoundLocationPresets" (
@@ -434,6 +454,54 @@ public static class DatabaseInitializer
         {
             await dbContext.Database.ExecuteSqlRawAsync("""ALTER TABLE "MarketplaceChatMessages" ADD COLUMN "ImagePath" TEXT NULL;""");
         }
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "SupportChatThreads" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_SupportChatThreads" PRIMARY KEY AUTOINCREMENT,
+                "UserId" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "LastMessageAtUtc" TEXT NULL,
+                CONSTRAINT "FK_SupportChatThreads_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_SupportChatThreads_UserId" ON "SupportChatThreads" ("UserId");
+            """
+        );
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "SupportChatMessages" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_SupportChatMessages" PRIMARY KEY AUTOINCREMENT,
+                "SupportChatThreadId" INTEGER NOT NULL,
+                "SenderUserId" TEXT NOT NULL,
+                "Body" TEXT NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_SupportChatMessages_SupportChatThreads_SupportChatThreadId" FOREIGN KEY ("SupportChatThreadId") REFERENCES "SupportChatThreads" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_SupportChatMessages_AspNetUsers_SenderUserId" FOREIGN KEY ("SenderUserId") REFERENCES "AspNetUsers" ("Id") ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS "IX_SupportChatMessages_SupportChatThreadId" ON "SupportChatMessages" ("SupportChatThreadId");
+            CREATE INDEX IF NOT EXISTS "IX_SupportChatMessages_CreatedAtUtc" ON "SupportChatMessages" ("CreatedAtUtc");
+            """
+        );
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "SupportChatThreadReads" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_SupportChatThreadReads" PRIMARY KEY AUTOINCREMENT,
+                "SupportChatThreadId" INTEGER NOT NULL,
+                "UserId" TEXT NOT NULL,
+                "LastReadAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_SupportChatThreadReads_SupportChatThreads_SupportChatThreadId" FOREIGN KEY ("SupportChatThreadId") REFERENCES "SupportChatThreads" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_SupportChatThreadReads_AspNetUsers_UserId" FOREIGN KEY ("UserId") REFERENCES "AspNetUsers" ("Id") ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_SupportChatThreadReads_Thread_User"
+                ON "SupportChatThreadReads" ("SupportChatThreadId", "UserId");
+            CREATE INDEX IF NOT EXISTS "IX_SupportChatThreadReads_UserId" ON "SupportChatThreadReads" ("UserId");
+            """
+        );
 
         await dbContext.Database.ExecuteSqlRawAsync(
             """

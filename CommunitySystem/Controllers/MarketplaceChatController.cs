@@ -52,9 +52,10 @@ public class MarketplaceChatController(
             return Forbid();
         }
 
+        var isAdmin = User.IsInRole(RoleNames.Admin);
         var item = await dbContext.MarketplaceItems
             .AsNoTracking()
-            .FirstOrDefaultAsync(value => value.Id == itemId && value.IsActive);
+            .FirstOrDefaultAsync(value => value.Id == itemId && (isAdmin || value.IsActive));
 
         if (item is null)
         {

@@ -169,6 +169,8 @@ public class ComplaintsController(
         await dbContext.SaveChangesAsync();
         await transaction.CommitAsync();
 
+        await NotifyAdminsOfNewComplaintAsync(complaintCase, currentUser.Id);
+
         return RedirectToAction(nameof(Details), new { id = complaintCase.Id });
     }
 
@@ -531,6 +533,46 @@ public class ComplaintsController(
         }
 
         return storedPaths;
+    }
+
+    private async Task NotifyAdminsOfNewComplaintAsync(ComplaintCase complaintCase, string reporterUserId)
+    {
+        var adminRoleId = await dbContext.Roles
+            .AsNoTracking()
+            .Where(role => role.Name == RoleNames.Admin)
+            .Select(role => role.Id)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(adminRoleId))
+        {
+            return;
+        }
+
+        var adminUserIds = await dbContext.UserRoles
+            .AsNoTracking()
+            .Where(link => link.RoleId == adminRoleId)
+            .Select(link => link.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var adminUserId in adminUserIds)
+        {
+            if (string.Equals(adminUserId, reporterUserId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = adminUserId,
+                ActorUserId = reporterUserId,
+                Type = NotificationType.ComplaintCreated,
+                Title = "New complaint submitted",
+                Body = complaintCase.Title.Length > 140 ? complaintCase.Title[..140] + "…" : complaintCase.Title,
+                LinkUrl = Url.Action("Details", "Complaints", new { id = complaintCase.Id }),
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
     }
 
     private static IEnumerable<SelectListItem> GetStatusOptions(ComplaintCaseStatus? selectedStatus = null)

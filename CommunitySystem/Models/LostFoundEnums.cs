@@ -12,3 +12,10 @@ public enum LostFoundItemStatus
     ClaimUnderReview = 2,
     Resolved = 3
 }
+
+public enum LostFoundClaimStatus
+{
+    Submitted = 1,
+    Approved = 2,
+    Rejected = 3
+}

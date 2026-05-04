@@ -57,6 +57,20 @@ public class LostFoundController(
         return View(items);
     }
 
+    [Authorize(Roles = RoleNames.Admin)]
+    public async Task<IActionResult> Claims(int take = 200)
+    {
+        var claims = await dbContext.LostFoundClaims
+            .AsNoTracking()
+            .Where(claim => claim.Status == LostFoundClaimStatus.Submitted)
+            .Include(claim => claim.LostFoundItem)
+            .OrderByDescending(claim => claim.CreatedAtUtc)
+            .Take(Math.Clamp(take, 1, 500))
+            .ToListAsync();
+
+        return View(claims);
+    }
+
     public async Task<IActionResult> Details(int? id)
     {
         if (id is null)
@@ -67,6 +81,154 @@ public class LostFoundController(
         var viewModel = await BuildDetailsViewModelAsync(id.Value);
         SetClaimDropdowns();
         return viewModel is null ? NotFound() : View(viewModel);
+    }
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveClaim(int id, int claimId, string? remarks = null)
+    {
+        var currentAdmin = await userManager.GetUserAsync(User);
+        if (currentAdmin is null)
+        {
+            return Challenge();
+        }
+
+        var item = await dbContext.LostFoundItems
+            .Include(value => value.Claims)
+            .FirstOrDefaultAsync(value => value.Id == id);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var claim = item.Claims.FirstOrDefault(value => value.Id == claimId);
+        if (claim is null)
+        {
+            return NotFound();
+        }
+
+        if (item.Status == LostFoundItemStatus.Resolved)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (claim.Status != LostFoundClaimStatus.Submitted)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var now = DateTime.UtcNow;
+        claim.Status = LostFoundClaimStatus.Approved;
+        claim.ReviewedAtUtc = now;
+        claim.ReviewedByUserId = currentAdmin.Id;
+        claim.AdminRemarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks.Trim();
+
+        foreach (var other in item.Claims.Where(value => value.Id != claim.Id && value.Status == LostFoundClaimStatus.Submitted))
+        {
+            other.Status = LostFoundClaimStatus.Rejected;
+            other.ReviewedAtUtc = now;
+            other.ReviewedByUserId = currentAdmin.Id;
+            other.AdminRemarks = "Another claim was approved.";
+        }
+
+        item.Status = LostFoundItemStatus.Resolved;
+        item.ResolvedAtUtc = now;
+        item.UpdatedAtUtc = now;
+
+        await dbContext.SaveChangesAsync();
+
+        if (!string.IsNullOrWhiteSpace(claim.ClaimerUserId))
+        {
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = claim.ClaimerUserId,
+                ActorUserId = currentAdmin.Id,
+                Type = NotificationType.LostFoundClaimReviewed,
+                Title = "Your lost & found claim was approved",
+                Body = item.Title.Length > 140 ? item.Title[..140] + "…" : item.Title,
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id })
+            });
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.ReporterUserId) && item.ReporterUserId != currentAdmin.Id)
+        {
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = item.ReporterUserId,
+                ActorUserId = currentAdmin.Id,
+                Type = NotificationType.LostFoundClaimReviewed,
+                Title = "A claim was approved and the case was closed",
+                Body = item.Title.Length > 140 ? item.Title[..140] + "…" : item.Title,
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id })
+            });
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [Authorize(Roles = RoleNames.Admin)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectClaim(int id, int claimId, string? remarks = null)
+    {
+        var currentAdmin = await userManager.GetUserAsync(User);
+        if (currentAdmin is null)
+        {
+            return Challenge();
+        }
+
+        var item = await dbContext.LostFoundItems
+            .Include(value => value.Claims)
+            .FirstOrDefaultAsync(value => value.Id == id);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var claim = item.Claims.FirstOrDefault(value => value.Id == claimId);
+        if (claim is null)
+        {
+            return NotFound();
+        }
+
+        if (claim.Status != LostFoundClaimStatus.Submitted)
+        {
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var now = DateTime.UtcNow;
+        claim.Status = LostFoundClaimStatus.Rejected;
+        claim.ReviewedAtUtc = now;
+        claim.ReviewedByUserId = currentAdmin.Id;
+        claim.AdminRemarks = string.IsNullOrWhiteSpace(remarks) ? null : remarks.Trim();
+
+        var hasPending = item.Claims.Any(value => value.Status == LostFoundClaimStatus.Submitted);
+        item.Status = hasPending ? LostFoundItemStatus.ClaimUnderReview : LostFoundItemStatus.Open;
+        item.UpdatedAtUtc = now;
+
+        await dbContext.SaveChangesAsync();
+
+        if (!string.IsNullOrWhiteSpace(claim.ClaimerUserId))
+        {
+            var body = string.IsNullOrWhiteSpace(claim.AdminRemarks)
+                ? (item.Title.Length > 140 ? item.Title[..140] + "…" : item.Title)
+                : claim.AdminRemarks.Length > 600 ? claim.AdminRemarks[..600] : claim.AdminRemarks;
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = claim.ClaimerUserId,
+                ActorUserId = currentAdmin.Id,
+                Type = NotificationType.LostFoundClaimReviewed,
+                Title = "Your lost & found claim was not approved",
+                Body = body,
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id })
+            });
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     public async Task<IActionResult> Create()
@@ -114,6 +276,8 @@ public class LostFoundController(
 
         dbContext.LostFoundItems.Add(item);
         await dbContext.SaveChangesAsync();
+
+        await NotifyAdminsOfNewLostFoundAsync(item, currentUser.Id);
 
         return RedirectToAction(nameof(Details), new { id = item.Id });
     }
@@ -363,6 +527,7 @@ public class LostFoundController(
             ClaimantPhone = claimForm.ClaimantPhone,
             VerificationDetails = claimForm.VerificationDetails,
             PreferredContactMethod = claimForm.PreferredContactMethod,
+            Status = LostFoundClaimStatus.Submitted,
             CreatedAtUtc = DateTime.UtcNow
         });
 
@@ -578,6 +743,46 @@ public class LostFoundController(
 
         var currentUser = await userManager.GetUserAsync(User);
         return currentUser is not null && item.ReporterUserId == currentUser.Id;
+    }
+
+    private async Task NotifyAdminsOfNewLostFoundAsync(LostFoundItem item, string reporterUserId)
+    {
+        var adminRoleId = await dbContext.Roles
+            .AsNoTracking()
+            .Where(role => role.Name == RoleNames.Admin)
+            .Select(role => role.Id)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(adminRoleId))
+        {
+            return;
+        }
+
+        var adminUserIds = await dbContext.UserRoles
+            .AsNoTracking()
+            .Where(link => link.RoleId == adminRoleId)
+            .Select(link => link.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var adminUserId in adminUserIds)
+        {
+            if (string.Equals(adminUserId, reporterUserId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            await notificationService.CreateAsync(new UserNotification
+            {
+                RecipientUserId = adminUserId,
+                ActorUserId = reporterUserId,
+                Type = NotificationType.LostFoundCreated,
+                Title = "New lost & found case submitted",
+                Body = item.Title.Length > 140 ? item.Title[..140] + "…" : item.Title,
+                LinkUrl = Url.Action("Details", "LostFound", new { id = item.Id }),
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
     }
 
     private async Task<bool> CanDeleteItemAsync(LostFoundItem item)

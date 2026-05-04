@@ -10,5 +10,8 @@ public enum NotificationType
     MarketplaceMessage = 5,
     PostCommented = 6,
     LostFoundClaimSubmitted = 7,
-    LostFoundStatusUpdated = 8
+    LostFoundStatusUpdated = 8,
+    ComplaintCreated = 9,
+    LostFoundCreated = 10,
+    LostFoundClaimReviewed = 11
 }

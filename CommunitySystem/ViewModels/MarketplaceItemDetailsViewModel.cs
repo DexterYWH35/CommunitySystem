@@ -8,6 +8,7 @@ public class MarketplaceItemDetailsViewModel
 
     public bool CanManage { get; init; }
 
+    public bool CanChat { get; init; }
+
     public int? ExistingChatThreadId { get; init; }
 }
-

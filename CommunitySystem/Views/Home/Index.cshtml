@@ -243,7 +243,7 @@ else
                                     }
                                 </div>
                                 <h3 class="h2 notice-title mb-3">@Model.FeaturedNotice.Title</h3>
-                                <p class="text-secondary mb-4">@Model.FeaturedNotice.Content</p>
+                                <p class="text-secondary mb-4 notice-preview-text notice-preview-text--clamp">@Model.FeaturedNotice.Content</p>
                                 <div class="d-flex flex-wrap gap-3">
                                     <a asp-controller="Notices" asp-action="Details" asp-route-id="@Model.FeaturedNotice.Id" class="btn notice-btn">Read Formal Notice</a>
                                     @if (!string.IsNullOrWhiteSpace(Model.FeaturedNotice.AttachmentPath))
@@ -280,7 +280,7 @@ else
                                     <span class="small text-secondary">@notice.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")</span>
                                 </div>
                                 <h3 class="h5">@notice.Title</h3>
-                                <p class="text-secondary mb-0">@notice.Content</p>
+                                <p class="text-secondary mb-0 notice-preview-text notice-preview-text--clamp">@notice.Content</p>
                             </div>
                             <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0 d-flex justify-content-between align-items-center">
                                 @if (!string.IsNullOrWhiteSpace(notice.AttachmentPath))

@@ -162,7 +162,10 @@
                                     <h3>@claim.ClaimantName</h3>
                                     <p class="text-secondary mb-0">@claim.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
                                 </div>
-                                <span class="lf-tag lf-tag--neutral">Admin Only</span>
+                                <div class="d-flex flex-wrap justify-content-end gap-2">
+                                    <span class="lf-tag lf-tag--neutral">Admin Only</span>
+                                    <span class="lf-tag lf-tag--neutral">@claim.Status</span>
+                                </div>
                             </div>
                             <div class="lf-meta-stack mb-3">
                                 <span><strong>Email</strong> @claim.ClaimantEmail</span>
@@ -173,6 +176,34 @@
                                 }
                             </div>
                             <p class="lf-description mb-0">@claim.VerificationDetails</p>
+
+                            @if (claim.ReviewedAtUtc.HasValue)
+                            {
+                                <div class="text-secondary small mt-3">
+                                    Reviewed @claim.ReviewedAtUtc.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                    @if (!string.IsNullOrWhiteSpace(claim.AdminRemarks))
+                                    {
+                                        <span>·</span>
+                                        <span>@claim.AdminRemarks</span>
+                                    }
+                                </div>
+                            }
+
+                            @if (Model.Item.Status != LostFoundItemStatus.Resolved && claim.Status == LostFoundClaimStatus.Submitted)
+                            {
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <form asp-action="ApproveClaim" asp-route-id="@Model.Item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Approve &amp; close case</button>
+                                    </form>
+                                    <form asp-action="RejectClaim" asp-route-id="@Model.Item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                </div>
+                            }
                         </article>
                     }
                 </div>

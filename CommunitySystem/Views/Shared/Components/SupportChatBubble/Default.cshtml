@@ -1,0 +1,45 @@
+@model CommunitySystem.ViewModels.SupportChatBubbleViewModel
+@using CommunitySystem.Security
+
+<div class="support-chat-bubble">
+    @if (Model.IsAdmin)
+    {
+        <a asp-controller="SupportChat"
+           asp-action="Index"
+           class="support-chat-bubble__btn"
+           title="Support chats"
+           aria-label="Support chats">
+            <span class="support-chat-bubble__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                    <path d="M21 12a8 8 0 0 1-8 8H6l-3 3v-7a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </span>
+            @if (Model.HasUnread)
+            {
+                <span class="support-chat-bubble__dot" aria-hidden="true"></span>
+            }
+        </a>
+    }
+    else
+    {
+        <a asp-controller="SupportChat"
+           asp-action="Open"
+           asp-route-returnUrl="@Model.ReturnUrl"
+           class="support-chat-bubble__btn"
+           title="Chat with admin"
+           aria-label="Chat with admin">
+            <span class="support-chat-bubble__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                    <path d="M21 12a8 8 0 0 1-8 8H6l-3 3v-7a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </span>
+            @if (Model.HasUnread)
+            {
+                <span class="support-chat-bubble__dot" aria-hidden="true"></span>
+            }
+        </a>
+    }
+</div>
+

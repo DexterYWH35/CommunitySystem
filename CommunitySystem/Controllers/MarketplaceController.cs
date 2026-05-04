@@ -20,9 +20,10 @@ public class MarketplaceController(
 
     public async Task<IActionResult> Index(string? q, MarketplaceListingType? type)
     {
+        var isAdmin = User.IsInRole(RoleNames.Admin);
         var query = dbContext.MarketplaceItems
             .AsNoTracking()
-            .Where(item => item.IsActive)
+            .Where(item => isAdmin || item.IsActive)
             .Include(item => item.Images.OrderBy(image => image.Id))
             .Include(item => item.OwnerUser)
             .OrderByDescending(item => item.CreatedAtUtc)
@@ -66,6 +67,9 @@ public class MarketplaceController(
 
     public async Task<IActionResult> Details(int id)
     {
+        var currentUserId = userManager.GetUserId(User);
+        var isAdmin = User.IsInRole(RoleNames.Admin);
+
         var item = await dbContext.MarketplaceItems
             .AsNoTracking()
             .Include(value => value.Images.OrderBy(image => image.Id))
@@ -77,11 +81,18 @@ public class MarketplaceController(
             return NotFound();
         }
 
-        var currentUserId = userManager.GetUserId(User);
-        var canManage = User.IsInRole(RoleNames.Admin) || (currentUserId is not null && item.OwnerUserId == currentUserId);
+        var isOwner = currentUserId is not null && item.OwnerUserId == currentUserId;
+
+        if (!item.IsActive && !isAdmin && !isOwner)
+        {
+            return NotFound();
+        }
+
+        var canManage = isAdmin || isOwner;
+        var canChat = currentUserId is not null && item.OwnerUserId != currentUserId;
 
         int? existingThreadId = null;
-        if (currentUserId is not null && item.OwnerUserId != currentUserId)
+        if (canChat)
         {
             existingThreadId = await dbContext.MarketplaceChatThreads
                 .AsNoTracking()
@@ -96,6 +107,7 @@ public class MarketplaceController(
         {
             Item = item,
             CanManage = canManage,
+            CanChat = canChat,
             ExistingChatThreadId = existingThreadId
         });
     }

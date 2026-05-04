@@ -59,7 +59,7 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link position-relative" asp-controller="MarketplaceChat" asp-action="Index" title="Chats">
+                                <a class="nav-link position-relative" asp-controller="Chats" asp-action="Index" title="Chats">
                                     <span class="visually-hidden">Chats</span>
                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
                                         <path d="M21 12a8 8 0 0 1-8 8H6l-3 3v-7a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -90,6 +90,7 @@
         </div>
     </footer>
     </div>
+    @await Component.InvokeAsync("SupportChatBubble")
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

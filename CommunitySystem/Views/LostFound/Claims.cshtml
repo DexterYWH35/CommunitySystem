@@ -1,0 +1,69 @@
+@model IReadOnlyList<CommunitySystem.Models.LostFoundClaim>
+@using CommunitySystem.Models
+
+@{
+    ViewData["Title"] = "Lost & Found Claims";
+}
+
+<section class="lf-shell">
+    <div class="lf-banner mb-4">
+        <div>
+            <span class="lf-kicker">Admin</span>
+            <h1>Claims inbox</h1>
+            <p>Review and approve claims to automatically close cases.</p>
+        </div>
+        <div class="lf-banner-actions">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <span class="lf-btn-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                Back to listings
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card p-3 p-lg-4">
+        @if (Model.Count == 0)
+        {
+            <div class="alert alert-info mb-0">No pending claims.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Claimant</th>
+                            <th>Submitted</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var claim in Model)
+                        {
+                            var itemTitle = claim.LostFoundItem?.Title ?? "Item";
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@itemTitle</div>
+                                    <div class="text-secondary small">Item #@claim.LostFoundItemId · Claim #@claim.Id</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@claim.ClaimantName</div>
+                                    <div class="text-secondary small">@claim.ClaimantEmail</div>
+                                </td>
+                                <td class="text-secondary">@claim.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@claim.LostFoundItemId" class="btn btn-sm btn-outline-primary">Review</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+

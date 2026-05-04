@@ -1,6 +1,7 @@
 using CommunitySystem.Models;
 using CommunitySystem.Models.Marketplace;
 using CommunitySystem.Models.Notifications;
+using CommunitySystem.Models.SupportChat;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +29,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<MarketplaceChatMessage> MarketplaceChatMessages => Set<MarketplaceChatMessage>();
     public DbSet<MarketplaceItemSave> MarketplaceItemSaves => Set<MarketplaceItemSave>();
     public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+    public DbSet<SupportChatThread> SupportChatThreads => Set<SupportChatThread>();
+    public DbSet<SupportChatMessage> SupportChatMessages => Set<SupportChatMessage>();
+    public DbSet<SupportChatThreadRead> SupportChatThreadReads => Set<SupportChatThreadRead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -181,6 +185,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(claim => claim.ClaimerUserId)
                 .HasMaxLength(450);
 
+            entity.Property(claim => claim.ReviewedByUserId)
+                .HasMaxLength(450);
+
             entity.Property(claim => claim.ClaimantName)
                 .HasMaxLength(80);
 
@@ -196,6 +203,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(claim => claim.PreferredContactMethod)
                 .HasMaxLength(40);
 
+            entity.Property(claim => claim.AdminRemarks)
+                .HasMaxLength(600);
+
             entity.HasIndex(claim => new { claim.LostFoundItemId, claim.ClaimerUserId })
                 .IsUnique()
                 .HasFilter("\"ClaimerUserId\" IS NOT NULL");
@@ -203,6 +213,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(claim => claim.ClaimerUser)
                 .WithMany(user => user.LostFoundClaims)
                 .HasForeignKey(claim => claim.ClaimerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(claim => claim.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(claim => claim.ReviewedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -417,6 +432,63 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(message => message.SenderUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SupportChatThread>(entity =>
+        {
+            entity.Property(thread => thread.UserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(thread => thread.UserId)
+                .IsUnique();
+
+            entity.HasOne(thread => thread.User)
+                .WithMany()
+                .HasForeignKey(thread => thread.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(thread => thread.Messages)
+                .WithOne(message => message.SupportChatThread)
+                .HasForeignKey(message => message.SupportChatThreadId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SupportChatMessage>(entity =>
+        {
+            entity.Property(message => message.SenderUserId)
+                .HasMaxLength(450);
+
+            entity.Property(message => message.Body)
+                .HasMaxLength(2000);
+
+            entity.HasIndex(message => message.SupportChatThreadId);
+            entity.HasIndex(message => message.CreatedAtUtc);
+
+            entity.HasOne(message => message.SenderUser)
+                .WithMany()
+                .HasForeignKey(message => message.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SupportChatThreadRead>(entity =>
+        {
+            entity.Property(read => read.UserId)
+                .HasMaxLength(450);
+
+            entity.HasIndex(read => new { read.SupportChatThreadId, read.UserId })
+                .IsUnique();
+
+            entity.HasIndex(read => read.UserId);
+
+            entity.HasOne(read => read.SupportChatThread)
+                .WithMany()
+                .HasForeignKey(read => read.SupportChatThreadId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(read => read.User)
+                .WithMany()
+                .HasForeignKey(read => read.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserNotification>(entity =>

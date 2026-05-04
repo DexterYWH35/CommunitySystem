@@ -1,0 +1,43 @@
+@using CommunitySystem.Security
+
+@{
+    ViewData["Title"] = "Chats";
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+}
+
+<div class="page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+        <span class="eyebrow">Messaging</span>
+        <h1 class="display-6 fw-semibold">Chats</h1>
+        <p class="text-secondary mb-0">Choose a chat type.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="table-card p-3 p-lg-4 h-100 d-flex flex-column gap-2">
+            <div class="fw-semibold fs-5">Marketplace chats</div>
+            <div class="text-secondary">Conversations about marketplace listings.</div>
+            <div class="mt-auto">
+                <a asp-controller="MarketplaceChat" asp-action="Index" class="btn btn-outline-primary">Open marketplace chats</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="table-card p-3 p-lg-4 h-100 d-flex flex-column gap-2">
+            <div class="fw-semibold fs-5">Support chat</div>
+            <div class="text-secondary">Chat directly with admin for any questions.</div>
+            <div class="mt-auto">
+                @if (isAdmin)
+                {
+                    <a asp-controller="SupportChat" asp-action="Index" class="btn btn-outline-primary">Open support inbox</a>
+                }
+                else
+                {
+                    <a asp-controller="SupportChat" asp-action="Open" asp-route-returnUrl="@($"{Context.Request.Path}{Context.Request.QueryString}")" class="btn btn-outline-primary">Chat with admin</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
