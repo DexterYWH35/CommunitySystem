@@ -282,7 +282,7 @@ Recommended follow-up work after the first production-ready pass:
 From the app folder:
 
 ```bash
-cd "/Users/dexteryap/Documents/dotNET/Community Services Portal/CommunitySystem"
+cd ".../Community Services Portal/CommunitySystem"
 dotnet run
 ```
 
