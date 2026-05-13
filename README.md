@@ -261,3 +261,11 @@ Build check:
 dotnet build
 ```
 
+
+This project is an independent development created by me and is not affiliated with, endorsed by, or connected to any third-party software developers, companies, or organizations.
+
+All icons, assets, or design elements used in this project are utilized solely for development, demonstration, or educational purposes. Any resemblance to existing products or branding is purely coincidental unless otherwise stated.
+
+All rights to their respective original assets belong to their rightful owners. This project does not claim ownership over any third-party intellectual property.
+
+If any content used in this project violates copyright or usage rights, please contact me so appropriate action can be taken immediately.
