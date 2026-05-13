@@ -279,7 +279,7 @@ public class LostFoundController(
 
         await NotifyAdminsOfNewLostFoundAsync(item, currentUser.Id);
 
-        return RedirectToAction(nameof(Details), new { id = item.Id });
+        return RedirectToAction(nameof(Details), new { id = item.Id, created = 1 });
     }
 
     public async Task<IActionResult> Edit(int? id)

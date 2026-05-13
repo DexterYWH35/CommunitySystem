@@ -6,6 +6,13 @@
 }
 
 <section class="lf-shell">
+    @if (Context.Request.Query.ContainsKey("created"))
+    {
+        <div class="alert alert-warning mb-4">
+            <strong>Reminder:</strong> Please send/hand over the item to <strong>REN Residences staff</strong> at the <strong>Lost &amp; Found counter</strong> (management office) for verification and collection.
+        </div>
+    }
+
     <div class="lf-banner mb-4">
         <div>
             <span class="lf-kicker">@Model.Item.ListingType Case</span>
