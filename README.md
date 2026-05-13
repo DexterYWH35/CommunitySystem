@@ -8,6 +8,9 @@ The application is a community content portal with:
 - posts and comments
 - likes for posts and comments
 - image upload for posts
+- lost & found module
+- complaints module
+- marketplace module
 - SQLite with Entity Framework Core
 - Bootstrap-styled Razor UI using the current magenta / plum design system
 
@@ -31,20 +34,25 @@ Implemented so far:
 - homepage most liked posts section
 - seeded sample data for development/testing
 - custom login, register, and access denied pages
+- chat sessions with products owner
+- supporting chat session with admin/ management users
+- complaint cases (INCLUDING CRUD)
+- lost and found cases (INCLUDING CRUD)
+- marketplace module (INCLUDING CRUD)
 
 ## Project Location
 
 Main application:
 
-- [CommunitySystem](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem)
+- [CommunitySystem](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem)
 
 Important startup and infrastructure files:
 
-- [Program.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Program.cs)
-- [ApplicationDbContext.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/ApplicationDbContext.cs)
-- [DatabaseInitializer.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/DatabaseInitializer.cs)
-- [SeedData.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/SeedData.cs)
-- [appsettings.json](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.json)
+- [Program.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Program.cs)
+- [ApplicationDbContext.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/ApplicationDbContext.cs)
+- [DatabaseInitializer.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/DatabaseInitializer.cs)
+- [SeedData.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/SeedData.cs)
+- [appsettings.json](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.json)
 
 ## Where Data Is Stored
 
@@ -52,7 +60,7 @@ Important startup and infrastructure files:
 
 Structured application data is currently stored in SQLite:
 
-- database file: [communitysystem.db](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/communitysystem.db)
+- database file: [communitysystem.db](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/communitysystem.db)
 
 This includes:
 
@@ -80,9 +88,9 @@ These are not stored inside the database as binary blobs. The database stores th
 
 Configuration is currently stored in:
 
-- [appsettings.json](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.json)
-- [appsettings.Development.json](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.Development.json)
-- [launchSettings.json](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Properties/launchSettings.json)
+- [appsettings.json](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.json)
+- [appsettings.Development.json](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/appsettings.Development.json)
+- [launchSettings.json](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Properties/launchSettings.json)
 
 Current database connection:
 
@@ -105,49 +113,10 @@ Stored through ASP.NET Core Identity:
 
 Relevant files:
 
-- [ApplicationUser.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/ApplicationUser.cs)
-- [AccountController.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Controllers/AccountController.cs)
-- [RoleNames.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Security/RoleNames.cs)
+- [ApplicationUser.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/ApplicationUser.cs)
+- [AccountController.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Controllers/AccountController.cs)
+- [RoleNames.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Security/RoleNames.cs)
 
-### Posts
-
-Each post currently captures:
-
-- title
-- author name
-- content
-- owner user id
-- created / updated timestamps
-- optional image path
-
-Relevant files:
-
-- [Post.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/Post.cs)
-- [PostsController.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Controllers/PostsController.cs)
-
-### Comments
-
-Each comment currently captures:
-
-- related post id
-- author name
-- comment body
-- owner user id
-- created timestamp
-
-Relevant files:
-
-- [Comment.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/Comment.cs)
-- [CommentsController.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Controllers/CommentsController.cs)
-
-### Likes
-
-Likes are stored as separate per-user records:
-
-- post likes in [PostLike.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/PostLike.cs)
-- comment likes in [CommentLike.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Models/CommentLike.cs)
-
-This means each user can like an item once, and a second click removes the like.
 
 ## Development Seed Data
 
@@ -178,7 +147,7 @@ Before deploying to production, complete the following in order.
 
 ### 1. Replace Development Credentials
 
-- Remove hardcoded development seed passwords from [SeedData.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/SeedData.cs)
+- Remove hardcoded development seed passwords from [SeedData.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/SeedData.cs)
 - Do not seed default admin/user passwords in production
 - Create the first admin user through a secure provisioning process
 
@@ -202,7 +171,7 @@ Before deploying to production, complete the following in order.
   - comments
   - likes
   - image path columns
-- Stop depending only on manual schema adjustment in [DatabaseInitializer.cs](/Users/dexteryap/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/DatabaseInitializer.cs)
+- Stop depending only on manual schema adjustment in [DatabaseInitializer.cs](/Documents/dotNET/Community%20Services%20Portal/CommunitySystem/Data/DatabaseInitializer.cs)
 
 ### 5. Harden File Uploads
 
